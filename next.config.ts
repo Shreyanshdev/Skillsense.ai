@@ -1,7 +1,26 @@
-import type { NextConfig } from "next";
+// next.config.js
 
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
+  webpack: (config: { resolve: { fallback: any; }; }) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      bufferutil: false,
+      "utf-8-validate": false,
+      buffer: require.resolve("buffer/"),
+    };
+    return config;
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
