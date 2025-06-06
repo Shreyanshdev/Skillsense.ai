@@ -387,7 +387,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
               {selectedSkills.map(skill => (
                 <motion.div key={skill.id} className="flex flex-col items-start w-full sm:w-auto">
                   <motion.button
-                    type="button"
+                    
                     onClick={() =>
                       editingProficiency === skill.id ? setEditingProficiency(null) : setEditingProficiency(skill.id)
                     }
@@ -395,7 +395,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
                   >
                     <span>{skill.name}</span>
                     <motion.button
-                          type="button"
+                          
                           onClick={(e) => { // Keep stopPropagation
                                             e.stopPropagation();
                                             handleRemoveSkill(skill.id);

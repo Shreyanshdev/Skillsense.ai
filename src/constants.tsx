@@ -24,12 +24,6 @@ export const EXPERIENCE_LEVELS = [
   { id: 'mid', name: 'Mid-Level (2-5 yrs)', icon: <FaUserGraduate /> },
 ];
 
-export const DURATION_OPTIONS = [
-  { id: '15m', name: 'Quick (15 min)', icon: <FaRocket /> },
-  { id: '30m', name: 'Standard (30 min)', icon: <FaClock /> },
-  { id: '45m', name: 'In-depth (45 min)', icon: <FaUserClock /> },
-  { id: '60m', name: 'Full (60 min)', icon: <FaHourglassHalf /> },
-];
 
 export const PROFICIENCY_LEVELS = [
   { id: 'familiar', name: 'Familiar', stars: 1 },

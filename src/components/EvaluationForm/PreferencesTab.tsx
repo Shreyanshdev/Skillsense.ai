@@ -1,34 +1,40 @@
 // src/components/EvaluationForm/PreferencesTab.tsx
 // Handles the content and logic for the 'Preferences' tab of the evaluation form
+// Now includes dynamic guidelines based on test configuration.
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaClock, FaTrashAlt, FaSpinner, FaTimesCircle, FaInfoCircle, FaCheckCircle } from 'react-icons/fa';
+import { FaClock, FaTrashAlt, FaSpinner, FaTimesCircle, FaInfoCircle, FaCheckCircle, FaQuestionCircle } from 'react-icons/fa'; // Added FaQuestionCircle
 import { FiCheckSquare } from 'react-icons/fi';
 import SectionWrapper from '@/components/common/SectionWrapper';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
-// Import constants and types
-import { DURATION_OPTIONS } from '@/constants';
-
 // Define props for the PreferencesTab component
 interface PreferencesTabProps {
-    // State
-    selectedDuration: string;
+    // State from EvaluationForm (some might be less relevant for UI, but passed for consistency)
+    selectedDuration: string; // Will no longer be used for UI selection, but might be sent to backend
     isSubmitting: boolean;
-    error: string; // Pass error state down to display relevant errors
-    isSubmitDisabled: boolean; // Pass the disabled state for the submit button
+    error: string;
+    
+    isSubmitDisabled: boolean;
 
-    // Handlers
-    handleDurationSelect: (durationId: string) => void;
+    // Handlers from EvaluationForm
+    handleDurationSelect: (durationId: string) => void; // No longer used for UI interaction
     handleClearAll: () => void;
-    handleSubmit: (event: React.FormEvent) => Promise<void>; // Pass the submit handler
+    handleSubmit: (event: React.FormEvent) => void; // Changed to React.FormEvent for better type safety
 
-    // Styling helpers (passed as props or imported if defined globally)
-    pillButtonClass: (isSelected: boolean) => string;
+    // Styling helpers (passed as props)
+    pillButtonClass: (isSelected: boolean) => string; // Still needed for general pill styling if any
     secondaryButtonClass: string;
     primaryButtonClass: string;
+
+    // NEW props for dynamic test configuration (from EvaluationForm)
+    testType: 'general' | 'specialized';
+    isGARoundSelected: boolean;
+    generalTestCounts: { mcq: number; theory: number; coding: number };
+    specializedRoundCounts: { mcq: number | ''; theory: number | ''; coding: number | ''; }; // Allow empty string
+    codingDifficulty: string; // 'easy', 'medium', 'hard', 'mixed'
 }
 
 const PreferencesTab: React.FC<PreferencesTabProps> = ({
@@ -38,19 +44,66 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
     handleDurationSelect, handleClearAll, handleSubmit,
     // Styling
     pillButtonClass, secondaryButtonClass, primaryButtonClass,
+    // New Test Config Props
+    testType, isGARoundSelected, generalTestCounts, specializedRoundCounts, codingDifficulty,
 }) => {
     const theme = useSelector((state: RootState) => state.theme.theme);
 
     // Guidelines Content component (defined locally as it's only used here)
-    const GuidelinesSection = ({ selectedDuration }: { selectedDuration: string }) => {
-        const theme = useSelector((state: RootState) => state.theme.theme);
-         const DURATION_OPTIONS = [ // Defined locally for this component
-              { id: '15m', name: 'Quick (15 min)', icon: null },
-              { id: '30m', name: 'Standard (30 min)', icon: null },
-              { id: '45m', name: 'In-depth (45 min)', icon: null },
-              { id: '60m', name: 'Full (60 min)', icon: null },
-         ];
-         const durationName = DURATION_OPTIONS.find(d => d.id === selectedDuration)?.name || 'selected duration';
+    const GuidelinesSection = () => {
+        // Calculate total questions and estimated time based on selected configuration
+        const getQuestionCounts = () => {
+            if (testType === 'general') {
+                return generalTestCounts;
+            }
+            // For specialized, ensure numbers are parsed, treat empty string as 0 for display
+            return {
+                mcq: typeof specializedRoundCounts.mcq === 'number' ? specializedRoundCounts.mcq : 0,
+                theory: typeof specializedRoundCounts.theory === 'number' ? specializedRoundCounts.theory : 0,
+                coding: typeof specializedRoundCounts.coding === 'number' ? specializedRoundCounts.coding : 0,
+            };
+        };
+
+        const currentCounts = getQuestionCounts();
+        let totalQuestions = currentCounts.mcq + currentCounts.theory + currentCounts.coding;
+        let estimatedMinutes = 0;
+        let roundDetails: string[] = [];
+
+        // Round 1: MCQ
+        if (currentCounts.mcq > 0) {
+            estimatedMinutes += currentCounts.mcq * 1; // 1 min per MCQ
+            roundDetails.push(`Round 1: ${currentCounts.mcq} Multiple Choice Questions (${currentCounts.mcq} min)`);
+        }
+
+        // Round 2: Theory
+        if (currentCounts.theory > 0) {
+            estimatedMinutes += currentCounts.theory * 2; // 2 min per Theory
+            roundDetails.push(`Round 2: ${currentCounts.theory} Theoretical Questions (${currentCounts.theory * 2} min)`);
+        }
+
+        // Round 3: Coding
+        if (currentCounts.coding > 0) {
+            let codingTimePerQuestion = 0;
+            switch (codingDifficulty) {
+                case 'easy': codingTimePerQuestion = 20; break;
+                case 'medium': codingTimePerQuestion = 30; break;
+                case 'hard': codingTimePerQuestion = 45; break;
+                case 'mixed': codingTimePerQuestion = 30; break; // For mixed, assume average 30 min per question for estimation
+                default: codingTimePerQuestion = 30; // Fallback
+            }
+            estimatedMinutes += currentCounts.coding * codingTimePerQuestion;
+            roundDetails.push(`Round 3: ${currentCounts.coding} Coding Questions (Difficulty: ${codingDifficulty.charAt(0).toUpperCase() + codingDifficulty.slice(1)}, Est. ${codingTimePerQuestion} min/Q, Total: ${currentCounts.coding * codingTimePerQuestion} min)`);
+        }
+
+        // GA Round (optional) - Added explicitly here for display
+        if (isGARoundSelected) {
+            totalQuestions += 10;
+            estimatedMinutes += 10; // 10 questions / 10 minutes for GA
+            roundDetails.push(`Optional GA Round: 10 General Aptitude Questions (10 min)`);
+        }
+
+        // Filter out empty rounds if specialized test allows 0 questions (though min 2 is enforced)
+        roundDetails = roundDetails.filter(detail => !detail.includes('0 Questions'));
 
 
         return (
@@ -59,15 +112,39 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.1 }}
-                    className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50 border border-gray-600 text-gray-300' : 'bg-blue-50/50 border border-blue-200 text-gray-700'}`}
+                    className={`p-5 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50 border border-gray-600 text-gray-300' : 'bg-blue-50/50 border border-blue-200 text-gray-700'}`}
                 >
+                    <h4 className={`font-semibold text-lg mb-3 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'}`}>Test Overview:</h4>
                     <ul className="list-disc list-inside space-y-2 text-sm sm:text-base">
-                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.2 }}><span className="font-semibold">Question Types:</span> You will encounter a mix of coding challenges, multiple-choice questions, and theoretical concepts.</motion.li>
-                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.3 }}><span className="font-semibold">Requirements:</span> Ensure you have a stable internet connection and a quiet environment.</motion.li>
-                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.4 }}><span className="font-semibold">Duration:</span> The test duration is based on your selection (<span className="font-semibold">{durationName}</span>). Manage your time effectively.</motion.li>
-                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.5 }}><span className="font-semibold">After the Test:</span> You will receive a summary of your performance and suggested areas for improvement.</motion.li>
+                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
+                            <span className="font-semibold">Test Type:</span> {testType === 'general' ? 'General Assessment' : 'Specialized Assessment'}
+                        </motion.li>
+                        {roundDetails.length > 0 && (
+                            <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
+                                <span className="font-semibold">Rounds:</span>
+                                <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                                    {roundDetails.map((detail, index) => (
+                                        <li key={index}>{detail}</li>
+                                    ))}
+                                </ul>
+                            </motion.li>
+                        )}
+                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.4 }}>
+                            <span className="font-semibold">Total Questions:</span> {totalQuestions}
+                        </motion.li>
+                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.5 }}>
+                            <span className="font-semibold">Estimated Duration:</span> {estimatedMinutes} minutes
+                        </motion.li>
+                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.6 }}>
+                            <span className="font-semibold">Navigation:</span> You can switch between questions and rounds at any time during the test.
+                        </motion.li>
+                        <motion.li initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: 0.7 }}>
+                            <span className="font-semibold">Requirements:</span> Ensure you have a stable internet connection and a quiet environment.
+                        </motion.li>
                     </ul>
-                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.6 }} className={`mt-3 text-xs sm:text-sm italic ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>This assessment helps us understand your strengths to provide tailored learning resources.</motion.p>
+                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.8 }} className={`mt-4 text-xs sm:text-sm italic ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        This assessment helps us understand your strengths to provide tailored learning resources.
+                    </motion.p>
                  </motion.div>
             </SectionWrapper>
         );
@@ -75,19 +152,11 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
 
 
     return (
-        <>
-            <GuidelinesSection selectedDuration={selectedDuration} />
+        <div className="space-y-8"> {/* Added overall vertical spacing */}
+            {/* Guidelines Section */}
+            <GuidelinesSection />
 
-            <SectionWrapper title="Test Duration" icon={<FaClock className="text-sky-500" />}>
-                <p className={`mb-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Choose how long you want the test to be.</p>
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {DURATION_OPTIONS.map(o => (
-                        <motion.button key={o.id} type="button" onClick={() => handleDurationSelect(o.id)} className={pillButtonClass(selectedDuration === o.id)} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
-                            {o.icon}<span>{o.name}</span>{selectedDuration === o.id && <FaCheckCircle className="ml-auto text-sky-500" />}
-                        </motion.button>
-                    ))}
-                </div>
-            </SectionWrapper>
+            {/* The old "Test Duration" section is removed as duration is now dynamic */}
 
             <div className="pt-6 space-y-4">
                 <AnimatePresence>
@@ -108,11 +177,11 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         onClick={handleSubmit}
                         className={`${primaryButtonClass} w-full sm:w-auto`}
                     >
-                        {isSubmitting ? <><FaSpinner className="animate-spin mr-2" /> Submitting...</> : <><FiCheckSquare className="mr-2" /> Start Evaluation</>}
+                        {isSubmitting ? <><FaSpinner className="animate-spin mr-2" /> Generating...</> : <><FiCheckSquare className="mr-2" /> Start Evaluation</>}
                     </motion.button>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
