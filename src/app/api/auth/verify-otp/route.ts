@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Clean up OTP records
     await OTP.deleteMany({ email });
 
-    return NextResponse.json({ success: true, message: "Email verified successfully" ,userId: user._id }, { status: 200 });
+    return NextResponse.json({ success: true, message: "Email verified successfully" ,userId: user ? user._id : null }, { status: 200 });
   } catch (error) {
     console.error("Verify OTP error:", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });

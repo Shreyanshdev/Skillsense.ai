@@ -1,15 +1,16 @@
-// ChatPage.tsx
 'use client';
 
 import EmptyState from '@/components/AIChat/emptyState';
 import { Input } from '@/components/AIChat/input';
 import AppLayout from '@/components/Layout/AppLayout';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, use } from 'react';
 import { FiSend } from 'react-icons/fi';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import axios from 'axios';
 import Markdown from 'react-markdown';
+import { useParams } from 'next/navigation';
+import { MdAddComment } from "react-icons/md"; // Import a suitable icon for "New Chat"
 
 type messages = {
   content: string;
@@ -28,6 +29,8 @@ function ChatPage() {
   const [messageList, setMessageList] = useState<messages[]>([
     { content: 'Hello! How can I assist you today?', role: 'assistant', type: 'text' },
   ]);
+  const {chatid} = useParams();
+  console.log("Chat ID:", chatid); // Debug line to check chatid
   const theme = useSelector((state: RootState) => state.theme.theme);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -76,6 +79,12 @@ function ChatPage() {
     }
   };
 
+  const handleNewChat = () => {
+    setMessageList([{ content: 'Hello! How can I assist you today?', role: 'assistant', type: 'text' }]);
+    setUserInput('');
+    setLoading(false);
+  };
+
   const textColorClass = theme === 'dark' ? 'text-gray-100' : 'text-gray-900';
   const subTextColorClass = theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
   const borderColorClass = theme === 'dark' ? 'border-gray-700' : 'border-gray-200';
@@ -98,9 +107,26 @@ function ChatPage() {
           className={`flex items-center justify-between py-4 border-b ${borderColorClass} ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}
           style={{ height: chatHeaderHeight }}
         >
-          <div className="w-full max-w-4xl mx-auto px-4 sm:px-6">
-            <h2 className={`font-bold text-2xl ${textColorClass}`}>AI Career Q&A</h2>
-            <p className={`text-md ${subTextColorClass}`}>Smarter career starts here – ask anything!</p>
+          <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 flex justify-between items-center">
+            <div>
+              <h2 className={`font-bold text-2xl ${textColorClass}`}>AI Career Q&A</h2>
+              <p className={`text-md ${subTextColorClass}`}>Smarter career starts here – ask anything!</p>
+            </div>
+            <div className="flex gap-3"> {/* Container for buttons */}
+            <button
+                onClick={handleNewChat}
+                className={`flex items-center space-x-1 px-4 py-2 rounded-md font-medium transition-colors duration-200 ${
+                  theme === 'dark'
+                    ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    : 'bg-black text-white hover:bg-gray-800'
+                }`}
+              >
+                <span>
+                  <MdAddComment /> New Chat
+                </span>
+              </button>
+              
+            </div>
           </div>
         </div>
 
@@ -110,7 +136,7 @@ function ChatPage() {
           className="overflow-y-auto w-full flex-grow" // flex-grow makes it take available vertical space
         >
           <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6">
-            {messageList.length === 1 ? (
+            {messageList.length === 1 && messageList[0].role === 'assistant' && messageList[0].content === 'Hello! How can I assist you today?' ? (
               <EmptyState selectedQuestion={(question: string) => setUserInput(question)} />
             ) : (
               <div className="pb-4">

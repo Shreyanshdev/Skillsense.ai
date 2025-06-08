@@ -58,7 +58,7 @@ export default function RootLayout({
 }) {
   return (
     // 1. Wrap your entire application with ClerkProvider
-    <ClerkProvider>
+
       <html lang="en" suppressHydrationWarning className={poppins.variable}>
         <body className="font-sans">
           {/*
@@ -69,8 +69,8 @@ export default function RootLayout({
                I'll include a simplified header here for demonstration,
                but you'll likely want to integrate UserButton into your TopNavbar.
           */}
-          {/*
-          <header className="flex justify-end items-center p-4 gap-4 h-16 border-b border-gray-200 dark:border-gray-700">
+
+            {/* <header className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-800 shadow-md">
             <SignedOut>
               <SignInButton mode="modal">
                 <button className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Sign In</button>
@@ -82,14 +82,14 @@ export default function RootLayout({
             <SignedIn>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
-          </header>
-          */}
+          </header> */}
+
 
           <Providers>
             {children}
           </Providers>
         </body>
       </html>
-    </ClerkProvider>
+
   );
 }

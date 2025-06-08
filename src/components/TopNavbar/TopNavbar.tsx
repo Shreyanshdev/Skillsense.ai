@@ -22,7 +22,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({ toggleMobileSidebar, className, s
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-            className={`fixed top-0 left-0 w-full  flex items-center justify-between h-16 px-4
+            className={`fixed top-0 left-0 w-full z-40 flex items-center justify-between h-16 px-4
                 ${theme === 'dark'
                     ? 'bg-gray-900'
                     : 'bg-white'}

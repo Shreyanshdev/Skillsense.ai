@@ -26,7 +26,7 @@ import Confirmation from './Confirmation'; // Reusing this for start test confir
 
 // Import constants and types
 import { SelectedSkill } from '@/constants';
-import SectionWrapper from '../common/SectionWrapper';
+
 
 // Define config for tabs within the form
 const TABS_CONFIG = [

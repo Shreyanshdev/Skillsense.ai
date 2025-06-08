@@ -1,5 +1,6 @@
-import { createAgent, gemini, openai } from "@inngest/agent-kit";
+import { createAgent, gemini } from "@inngest/agent-kit";
 import { inngest } from "./client";
+
 
 export const AiCareerChatAgent = createAgent({
     name: "AiCareerChatAgent",

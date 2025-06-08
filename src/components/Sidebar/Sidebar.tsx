@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fa';
 import { FiMenu, FiX, FiMoon, FiSun } from 'react-icons/fi';
 import { useState, useEffect, useCallback } from 'react';
+import {v4 as uuidv4} from 'uuid'; // Importing uuid for unique keys
 
 
 interface SidebarProps {
@@ -34,10 +35,7 @@ const sidebarItems = [
   { id: 'evaluation', name: 'Evaluation', icon: <FaChartLine /> },
   { id: 'goals', name: 'Goal Tracker', icon: <FaBullseye /> },
   // Consider replacing with more suitable AI icons
-  { id: 'chatpage', name: 'AI Chat', icon: <FaHome /> },
-  { id: 'ai-resume-analyzer', name: 'Resume Analyzer', icon: <FaChartLine /> },
-  { id: 'career-roadmap-generator', name: 'Roadmap Generator', icon: <FaBullseye /> },
-  { id: 'cover-letter-generator', name: 'Cover Letter', icon: <FaCog /> },
+  
   { id: 'billing' , name:'Billing' , icon:<FaAmazonPay />},
 ];
 
@@ -215,7 +213,37 @@ const Sidebar: React.FC<SidebarProps> = ({
               {[
                 { id: 'settings', name: 'Settings', icon: <FaCog />, color: theme === 'dark' ? 'text-gray-400' : 'text-gray-600', onClick: () => { /* Handle settings logic */ } },
                 { id: 'theme', name: 'Switch Theme', icon: theme === 'dark' ? <FiMoon /> : <FiSun />, color: theme === 'dark' ? 'text-amber-300' : 'text-sky-600', onClick: () => dispatch(toggleTheme()) },
-                { id: 'logout', name: 'Logout', icon: <FaSignOutAlt />, color: theme === 'dark' ? 'text-red-400' : 'text-red-500', onClick: () => { /* Handle logout logic */ } }
+                { id: 'logout', name: 'Logout', icon: <FaSignOutAlt />, color: theme === 'dark' ? 'text-red-400' : 'text-red-500', 
+                  onClick: async () => {
+                    try {
+                      const res = await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include',
+                      });
+                  
+                      // DEBUG:
+                      console.log('Logout status:', res.status);
+                      console.log('Content-Type:', res.headers.get('content-type'));
+                      const text = await res.text();
+                      console.log('Raw response body:', text.slice(0, 200)); 
+                  
+                      // only parse JSON if it’s actually JSON
+                      if (res.headers.get('content-type')?.includes('application/json')) {
+                        const data = JSON.parse(text);
+                        if (res.ok) {
+                          console.log('Logout successful:', data.message);
+                          window.location.href = '/login';
+                        } else {
+                          console.error('Logout failed:', data.message);
+                        }
+                      } else {
+                        console.error('Expected JSON but got HTML');
+                      }
+                    } catch (error) {
+                      console.error('Logout error:', error);
+                    }
+                  }
+                                    }
               ].map(btn => (
                 <motion.button
                   key={btn.id}
