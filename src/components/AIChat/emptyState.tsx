@@ -1,5 +1,4 @@
-// src/components/AIChat/emptyState.tsx
-'use client'; // Ensure this is present if using hooks
+'use client';
 
 import React from 'react';
 import { useSelector } from 'react-redux';
@@ -15,35 +14,50 @@ const questionList = [
 
 function EmptyState({ selectedQuestion }: { selectedQuestion: (question: string) => void }) {
   const theme = useSelector((state: RootState) => state.theme.theme);
+  const isDark = theme === 'dark';
 
-  const headingColorClass = theme === 'dark' ? 'text-gray-100' : 'text-gray-900';
-  const cardBgClass = theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600 border border-gray-600' : 'bg-gray-100 hover:bg-gray-200 border border-gray-200';
-  const cardTextColorClass = theme === 'dark' ? 'text-gray-200' : 'text-gray-800';
+  // Adjusted colors for Gemini-like sky-blue gradient theme
+  const headingColorClass = isDark ? 'text-gray-100' : 'text-gray-900';
+  const cardBgGradientLight = 'bg-gradient-to-br from-blue-50 to-sky-100'; // Softer light gradient
+  const cardBgGradientDark = 'bg-gradient-to-br from-blue-950 to-sky-900'; // Deeper dark gradient
+  const cardBorderLight = 'border-blue-200';
+  const cardBorderDark = 'border-sky-800';
+  const cardTextColorLight = 'text-gray-800';
+  const cardTextColorDark = 'text-gray-200';
+  const cardHoverShadowLight = 'shadow-lg shadow-blue-200/50';
+  const cardHoverShadowDark = 'shadow-lg shadow-sky-700/50';
+
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-3xl w-full text-center p-6 rounded-lg" // Added padding and rounded corners to the overall div
+      className="max-w-3xl w-full mx-auto text-center p-6" // Added mx-auto for centering
     >
-        <h2 className={`font-bold text-xl sm:text-2xl mb-8 ${headingColorClass}`}>
-            Ask anything to your AI Career Agent
+        <h2 className={`font-bold text-xl sm:text-3xl mb-12 ${headingColorClass}`}>
+            Ask anything to your <span className={isDark ? 'text-sky-400' : 'text-blue-600'}>AI Career Agent</span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Responsive grid for questions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Increased gap for more breathing room */}
             {questionList.map((question, index) => (
                 <motion.div
                     key={index}
                     onClick={() => selectedQuestion(question)}
-                    whileHover={{ scale: 1.02, boxShadow: theme === 'dark' ? '0 4px 15px rgba(59, 130, 246, 0.2)' : '0 4px 15px rgba(0,0,0,0.1)' }}
+                    whileHover={{
+                      scale: 1.03, // Slightly increased hover scale
+                      boxShadow: isDark ? cardHoverShadowDark : cardHoverShadowLight // Dynamic shadow based on theme
+                    }}
                     whileTap={{ scale: 0.98 }}
                     className={`
-                        p-4 rounded-xl cursor-pointer text-left
-                        transition-all duration-200 ease-in-out
-                        ${cardBgClass}
+                        p-5 rounded-xl cursor-pointer text-left flex items-center justify-center min-h-[100px] // Added min-h for consistent card size
+                        transition-all duration-300 ease-in-out transform
+                        ${isDark ? cardBgGradientDark : cardBgGradientLight}
+                        ${isDark ? cardBorderDark : cardBorderLight} border
+                        ${isDark ? cardTextColorDark : cardTextColorLight}
+                        hover:brightness-110 // Subtle brightness on hover
                     `}
                 >
-                    <p className={`${cardTextColorClass} font-medium`}>{question}</p>
+                    <p className={`font-medium text-base sm:text-lg text-center`}>{question}</p>
                 </motion.div>
             ))}
         </div>

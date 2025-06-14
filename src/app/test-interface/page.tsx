@@ -12,17 +12,17 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import { TestData, TestState, Question } from '@/types/index';
-import { v4 as uuidv4 } from 'uuid'; // Import types from your testSlice
+import { v4 as uuidv4 } from 'uuid';
 
 // Import ALL necessary types and actions from your testSlice
-import testSlice, {
+import {
   setTestLoading,
   setTestError,
-  setUserAnswer,           // <-- NEW: Import this
-  setFlaggedQuestion,       // <-- NEW: Import this
-  unsetFlaggedQuestion,     // <-- NEW: Import this
+  setUserAnswer,
+  setFlaggedQuestion,
+  unsetFlaggedQuestion,
   setCurrentQuestionIndex,
-  clearTestState,  // <-- NEW: Import this
+  clearTestState,
 } from '@/redux/slices/testSlice';
 
 
@@ -36,11 +36,7 @@ const ConfirmationModal = dynamic(() => import('@/components/TestInterface/Confi
 
 
 // IMPORTANT: Ensure these interfaces match your testSlice.ts and backend response
-// It's generally better to import these directly from a central types file or your testSlice.ts
-// For now, I'm defining them here based on your testSlice for clarity.
-// If your TestSlice's `TestData` type is different from `TestDataWithRounds`, adjust here.
-interface TestDataWithRounds extends TestData { // Assuming TestData from slice is the base, and you're adding methods or computed props
-  // TestData from testSlice already includes id, rounds, totalDurationMinutes
+interface TestDataWithRounds extends TestData {
   title: string; // If your backend also sends a title (not in current TestData from slice)
 }
 
@@ -51,28 +47,20 @@ type QuestionStatus = 'attempted' | 'non-attempted' | 'skipped' | 'flagged';
 const TestInterfacePage: React.FC = () => {
   const theme = useSelector((state: RootState) => state.theme.theme);
 
-  // Directly use the TestState type from your slice
   const testState: TestState = useSelector((state: RootState) => state.test);
   const dispatch = useDispatch();
   const router = useRouter();
 
-  // Destructure relevant state directly from Redux for easier access
   const { testData, userAnswers, flaggedQuestions, loading, error, currentQuestionIndex: reduxCurrentQuestionIndex } = testState;
 
 
-  // Local component states (ONLY for UI elements not directly managed by Redux)
-  // [IMPORTANT]: userAnswers and flaggedQuestions are NO LONGER local states here.
-  const [currentRoundIndex, setCurrentRoundIndex] = useState(0); // Track current round
-  // const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0); // REMOVED: Now from Redux: reduxCurrentQuestionIndex
-
-
-  // Use -1 for uninitialized timer state
+  const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState<number>(-1);
-  const [initialTime, setInitialTime] = useState<number>(-1); // Store initial time for progress bar
+  const [initialTime, setInitialTime] = useState<number>(-1);
   const [userId, setUserId] = useState<string | null>(null);
 
   const [isTestSubmitted, setIsTestSubmitted] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Open sidebar by default
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   // --- Initialize userId from localStorage ---
@@ -88,7 +76,6 @@ const TestInterfacePage: React.FC = () => {
 
   // Initialize timer when testData loads (and timer not initialized)
   useEffect(() => {
-    // Only initialize if testData is present, rounds exist, and timer hasn't started (-1)
     if (
       testData &&
       testData.rounds && testData.rounds.length > 0 &&
@@ -102,19 +89,15 @@ const TestInterfacePage: React.FC = () => {
 
       const calculatedTime = testData.totalDurationMinutes * 60;
       setTimeRemaining(calculatedTime);
-      setInitialTime(calculatedTime); // Store initial time
-      
-      // userAnswers initialization is now handled by Redux initialState and `setUserAnswer` as user types.
-      // Do NOT re-initialize userAnswers locally or in Redux here if you want it to persist through component re-renders.
-      // It starts as {} in Redux.
+      setInitialTime(calculatedTime);
+
     } else if (
       !testData &&
       !loading &&
       !error &&
       !isTestSubmitted &&
-      timeRemaining === -1 // Prevent redirect if timer was already running (e.g., on refresh)
+      timeRemaining === -1
     ) {
-      // No test data - likely user refreshed or navigated directly - redirect
       console.warn('No test data found. Redirecting to evaluation form.');
       router.replace('/evaluation');
     }
@@ -141,14 +124,12 @@ const TestInterfacePage: React.FC = () => {
   }, [timeRemaining, loading, testData, isTestSubmitted]);
 
   const handleSubmitTest = useCallback(async () => {
-    // Use Redux `loading` state to prevent double submission
-    // Also ensure userId is available
     if (isTestSubmitted || loading || !testData || !userId) {
       if (!userId) toast.error("User ID not available. Cannot submit.");
       return;
     }
 
-    setIsTestSubmitted(true); // Local flag to prevent immediate re-submission attempts
+    setIsTestSubmitted(true);
     dispatch(setTestLoading(true));
     dispatch(setTestError(null));
 
@@ -161,11 +142,34 @@ const TestInterfacePage: React.FC = () => {
         return;
       }
 
+      // --- NEW: Prepare questionsForEvaluation array ---
+      const questionsForEvaluation = testData.rounds.flatMap(round =>
+        round.questions.map(question => {
+          const userAnswerValue = userAnswers[question.id] || ''; // Get user's answer from Redux state, default to empty string
+          const isFlagged = flaggedQuestions.includes(question.id); // Check if question is flagged
+
+          // Structure the object to include all necessary data for backend evaluation
+          const questionData: any = { // Use 'any' temporarily or define a more specific type if needed
+            questionId: question.id,
+            questionText: question.questionText,
+            questionType: question.type,
+            userAnswer: userAnswerValue,
+          };
+
+          if (question.type === 'multiple-choice' || question.type === 'general-aptitude') {
+            questionData.options = (question as any).options;
+            questionData.correctAnswer = (question as any).correctAnswer; 
+          } 
+
+          return questionData;
+        })
+      );
+      // --- END NEW ---
+
       const submissionPayload = {
         testId: testData.id,
-        userAnswers: userAnswers,
-        flaggedQuestions: flaggedQuestions,
-        userId: userId, // <-- NEW: Include userId in the payload
+        userId: userId,
+        questionsForEvaluation: questionsForEvaluation, 
       };
 
       console.log('TestInterfacePage: Data being sent to /api/submit-test-for-review:', submissionPayload);
@@ -184,22 +188,19 @@ const TestInterfacePage: React.FC = () => {
       const results = await response.json();
       toast.success('Test submitted successfully!');
 
-      // NEW: Clear Redux test state after successful submission
       dispatch(clearTestState());
 
-      // Navigate to the review page using the reviewSessionId returned from the backend
       router.push(`/review-test/${results.reviewSessionId}`);
     } catch (err: any) {
       console.error('Error submitting test:', err);
       dispatch(setTestError(`Submission failed: ${err.message}`));
-      setIsTestSubmitted(false); // Allow resubmission if failed
+      setIsTestSubmitted(false);
       toast.error(err.message || 'Submission failed');
     } finally {
       dispatch(setTestLoading(false));
     }
-  }, [isTestSubmitted, loading, testData, userAnswers, flaggedQuestions, userId, dispatch, router]); // Added userId to dependencies
+  }, [isTestSubmitted, loading, testData, userAnswers, flaggedQuestions, userId, dispatch, router]);
 
-  // Auto-submit when time is up
   // Auto-submit when time is up
   useEffect(() => {
     if (timeRemaining === 0 && !isTestSubmitted && testData && !loading) {
@@ -215,7 +216,7 @@ const TestInterfacePage: React.FC = () => {
   );
 
   const currentQuestion = useMemo(
-    () => currentRound?.questions[reduxCurrentQuestionIndex], // Use reduxCurrentQuestionIndex
+    () => currentRound?.questions[reduxCurrentQuestionIndex],
     [currentRound, reduxCurrentQuestionIndex]
   );
 
@@ -235,15 +236,14 @@ const TestInterfacePage: React.FC = () => {
   // Time progress (based on remaining time)
   const timeProgressPercentage = useMemo(() => {
       if (initialTime <= 0 || timeRemaining < 0) return 0;
-      // Calculate percentage of time elapsed
       return ((initialTime - timeRemaining) / initialTime) * 100;
   }, [timeRemaining, initialTime]);
 
 
   // Calculate question status (attempted, non-attempted, skipped, flagged)
   const getQuestionStatus = useCallback((questionId: string): QuestionStatus => {
-      const answer = userAnswers[questionId]; // <-- FROM REDUX
-      if (flaggedQuestions.includes(questionId)) { // <-- FROM REDUX
+      const answer = userAnswers[questionId];
+      if (flaggedQuestions.includes(questionId)) {
           return 'flagged';
       } else if (answer === 'SKIPPED') {
           return 'skipped';
@@ -256,7 +256,7 @@ const TestInterfacePage: React.FC = () => {
       } else {
           return 'non-attempted';
       }
-  }, [userAnswers, flaggedQuestions, testData?.rounds]); // Dependencies from Redux state
+  }, [userAnswers, flaggedQuestions, testData?.rounds]);
 
 
   // Count attempted questions across all rounds
@@ -289,20 +289,20 @@ const TestInterfacePage: React.FC = () => {
 
       if (direction === 'next') {
         if (reduxCurrentQuestionIndex < totalQuestionsInCurrent - 1) {
-          dispatch(setCurrentQuestionIndex(reduxCurrentQuestionIndex + 1)); // Dispatch to Redux
+          dispatch(setCurrentQuestionIndex(reduxCurrentQuestionIndex + 1));
         } else if (currentRoundIndex < totalRoundsCount - 1) {
-          setCurrentRoundIndex(prev => prev + 1); // Local state for round index
-          dispatch(setCurrentQuestionIndex(0)); // Dispatch to Redux
+          setCurrentRoundIndex(prev => prev + 1);
+          dispatch(setCurrentQuestionIndex(0));
         } else {
           console.log("Reached end of test.");
         }
       } else { // direction === 'prev'
         if (reduxCurrentQuestionIndex > 0) {
-          dispatch(setCurrentQuestionIndex(reduxCurrentQuestionIndex - 1)); // Dispatch to Redux
+          dispatch(setCurrentQuestionIndex(reduxCurrentQuestionIndex - 1));
         } else if (currentRoundIndex > 0) {
           const prevRoundQuestions = testData.rounds[currentRoundIndex - 1].questions;
-          setCurrentRoundIndex(prev => prev - 1); // Local state for round index
-          dispatch(setCurrentQuestionIndex(prevRoundQuestions.length - 1)); // Dispatch to Redux
+          setCurrentRoundIndex(prev => prev - 1);
+          dispatch(setCurrentQuestionIndex(prevRoundQuestions.length - 1));
         } else {
           console.log("Reached beginning of test.");
         }
@@ -314,22 +314,22 @@ const TestInterfacePage: React.FC = () => {
   // Update user answer - now dispatches to Redux
   const onAnswerChange = useCallback(
     (id: string, answer: any) => {
-      dispatch(setUserAnswer({ questionId: id, answer: answer })); // Dispatch Redux action
-      console.log(`Dispatched Redux setUserAnswer for ${id}: ${answer}`); // For debugging
+      dispatch(setUserAnswer({ questionId: id, answer: answer }));
+      console.log(`Dispatched Redux setUserAnswer for ${id}: ${answer}`);
     },
     [dispatch]
   );
 
   // Toggle flag status for a question - now dispatches to Redux
   const toggleFlagQuestion = useCallback((questionId: string) => {
-      if (flaggedQuestions.includes(questionId)) { // Use flaggedQuestions from Redux
-          dispatch(unsetFlaggedQuestion(questionId)); // Dispatch Redux action
+      if (flaggedQuestions.includes(questionId)) {
+          dispatch(unsetFlaggedQuestion(questionId));
           console.log(`Dispatched Redux unsetFlaggedQuestion for ${questionId}`);
       } else {
-          dispatch(setFlaggedQuestion(questionId)); // Dispatch Redux action
+          dispatch(setFlaggedQuestion(questionId));
           console.log(`Dispatched Redux setFlaggedQuestion for ${questionId}`);
       }
-  }, [dispatch, flaggedQuestions]); // Dependency on flaggedQuestions from Redux
+  }, [dispatch, flaggedQuestions]);
 
   const handleSkip = () => {
     if (currentQuestion) {
@@ -340,15 +340,12 @@ const TestInterfacePage: React.FC = () => {
 
   // Handle sidebar question selection (now takes roundIndex and questionIndex)
   const handleSidebarQuestionSelect = useCallback((roundIndex: number, questionIndex: number) => {
-    setCurrentRoundIndex(roundIndex); // Local state for round index
-    dispatch(setCurrentQuestionIndex(questionIndex)); // Dispatch to Redux
-    // Keep sidebar open
+    setCurrentRoundIndex(roundIndex);
+    dispatch(setCurrentQuestionIndex(questionIndex));
   }, [dispatch]);
 
   // Handle exit without evaluation
   const handleExitWithoutEvaluation = useCallback(() => {
-      // Assuming you have an action to clear test data in Redux
-      // dispatch(clearTestData()); // Example action (if you want to clear redux state on exit)
       router.replace('/evaluation');
   }, [router]);
 
@@ -357,7 +354,7 @@ const TestInterfacePage: React.FC = () => {
   const isLastQuestionOfLastRound = useMemo(() => {
       if (!testData || totalRounds === 0) return false;
       const isLastRound = currentRoundIndex === totalRounds - 1;
-      const isLastQuestion = reduxCurrentQuestionIndex === totalQuestionsInCurrentRound - 1; // Use reduxCurrentQuestionIndex
+      const isLastQuestion = reduxCurrentQuestionIndex === totalQuestionsInCurrentRound - 1;
       return isLastRound && isLastQuestion;
   }, [currentRoundIndex, reduxCurrentQuestionIndex, totalRounds, totalQuestionsInCurrentRound, testData]);
 
@@ -406,12 +403,12 @@ const TestInterfacePage: React.FC = () => {
             isOpen={isSidebarOpen}
             rounds={testData.rounds}
             currentRoundIndex={currentRoundIndex}
-            currentQuestionIndex={reduxCurrentQuestionIndex} // Use reduxCurrentQuestionIndex
+            currentQuestionIndex={reduxCurrentQuestionIndex}
             onQuestionSelect={handleSidebarQuestionSelect}
             onClose={() => setIsSidebarOpen(false)}
             theme={theme}
-            userAnswers={userAnswers} // <-- FROM REDUX
-            flaggedQuestions={flaggedQuestions} // <-- FROM REDUX
+            userAnswers={userAnswers}
+            flaggedQuestions={flaggedQuestions}
             onExitWithoutEvaluation={handleExitWithoutEvaluation}
             getQuestionStatus={getQuestionStatus}
             timeRemaining={timeRemaining}
@@ -486,38 +483,38 @@ const TestInterfacePage: React.FC = () => {
                 {currentQuestion.type === 'multiple-choice' ? (
                   <MCQComponent
                     question={currentQuestion as Extract<Question, { type: 'multiple-choice' }>}
-                    userAnswer={userAnswers[currentQuestion.id]} // <-- FROM REDUX
-                    onAnswerChange={onAnswerChange} // <-- DISPATCHES TO REDUX
+                    userAnswer={userAnswers[currentQuestion.id]}
+                    onAnswerChange={onAnswerChange}
                     theme={theme}
-                    isFlagged={flaggedQuestions.includes(currentQuestion.id)} // <-- FROM REDUX
-                    onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)} // <-- DISPATCHES TO REDUX
+                    isFlagged={flaggedQuestions.includes(currentQuestion.id)}
+                    onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
                   />
                 ) : currentQuestion.type === 'general-aptitude' ? (
                   <GAComponent
                     question={currentQuestion as Extract<Question, { type: 'general-aptitude' }>}
-                    userAnswer={userAnswers[currentQuestion.id]} // <-- FROM REDUX
-                    onAnswerChange={onAnswerChange} // <-- DISPATCHES TO REDUX
+                    userAnswer={userAnswers[currentQuestion.id]}
+                    onAnswerChange={onAnswerChange}
                     theme={theme}
-                    isFlagged={flaggedQuestions.includes(currentQuestion.id)} // <-- FROM REDUX
-                    onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)} // <-- DISPATCHES TO REDUX
+                    isFlagged={flaggedQuestions.includes(currentQuestion.id)}
+                    onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
                   />
                 ) : currentQuestion.type === 'theoretical' ? (
                   <TheoryComponent
                     question={currentQuestion as Extract<Question , { type: 'theoretical' }>}
-                    userAnswer={userAnswers[currentQuestion.id]} // <-- FROM REDUX
-                    onAnswerChange={onAnswerChange} // <-- DISPATCHES TO REDUX
+                    userAnswer={userAnswers[currentQuestion.id]}
+                    onAnswerChange={onAnswerChange}
                     theme={theme}
-                    isFlagged={flaggedQuestions.includes(currentQuestion.id)} // <-- FROM REDUX
-                    onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)} // <-- DISPATCHES TO REDUX
+                    isFlagged={flaggedQuestions.includes(currentQuestion.id)}
+                    onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
                   />
                 ) : currentQuestion.type === 'coding-challenge' ? (
                   <CodingComponent
                     question={currentQuestion as any}
-                    userAnswer={userAnswers[currentQuestion.id]} // <-- FROM REDUX
-                    onAnswerChange={onAnswerChange} // <-- DISPATCHES TO REDUX
+                    userAnswer={userAnswers[currentQuestion.id]}
+                    onAnswerChange={onAnswerChange}
                     theme={theme}
-                    isFlagged={flaggedQuestions.includes(currentQuestion.id)} // <-- FROM REDUX
-                    onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)} // <-- DISPATCHES TO REDUX
+                    isFlagged={flaggedQuestions.includes(currentQuestion.id)}
+                    onToggleFlag={() => toggleFlagQuestion(currentQuestion.id)}
                   />
                 ) : (
                   <div className="text-center text-lg mt-10">Unsupported question type: {currentQuestion.type}</div>
@@ -537,7 +534,7 @@ const TestInterfacePage: React.FC = () => {
       } backdrop-blur-lg rounded-xl shadow-xl px-6 py-3 flex gap-4 transition-all duration-300 ${isSidebarOpen ? 'ml-40' : 'ml-0'}`}>
         <motion.button
           onClick={() => handleNavigation('prev')}
-          disabled={currentRoundIndex === 0 && reduxCurrentQuestionIndex === 0} // Use reduxCurrentQuestionIndex
+          disabled={currentRoundIndex === 0 && reduxCurrentQuestionIndex === 0}
           className={`p-3 rounded-lg transition-colors ${
             theme === 'dark' ? 'text-gray-300 hover:bg-gray-800 disabled:opacity-50' : 'text-gray-700 hover:bg-gray-100 disabled:opacity-50'
           }`}
@@ -550,9 +547,9 @@ const TestInterfacePage: React.FC = () => {
 
         {currentQuestion && (
             <motion.button
-                onClick={() => toggleFlagQuestion(currentQuestion.id)} // <-- DISPATCHES TO REDUX
+                onClick={() => toggleFlagQuestion(currentQuestion.id)}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                    flaggedQuestions.includes(currentQuestion.id) // <-- FROM REDUX
+                    flaggedQuestions.includes(currentQuestion.id)
                         ? 'bg-yellow-500/30 text-yellow-400 hover:bg-yellow-500/40'
                         : (theme === 'dark'
                             ? 'bg-gray-700/30 text-gray-300 hover:bg-gray-700/40'
@@ -605,10 +602,10 @@ const TestInterfacePage: React.FC = () => {
                 message="Are you sure you want to submit the test? You will not be able to change your answers after submitting."
                 confirmText="Yes, Submit"
                 cancelText="No, Cancel"
-                userAnswers={userAnswers} // <-- FROM REDUX
-                testData={testData as TestDataWithRounds || null}// <-- FROM REDUX
+                userAnswers={userAnswers}
+                testData={testData as TestDataWithRounds || null}
                 getQuestionStatus={getQuestionStatus}
-                flaggedQuestions={flaggedQuestions} // <-- FROM REDUX
+                flaggedQuestions={flaggedQuestions}
             />
             )}
         </AnimatePresence>

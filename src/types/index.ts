@@ -5,6 +5,7 @@
 export type QuestionType = 'multiple-choice' | 'coding-challenge' | 'theoretical' | 'general-aptitude'; // Added 'general-aptitude'
 
 export interface Question {
+    question: any;
     testCases: { input: string; output: string; }[] | null; // Use null instead of undefined if object won't exist
     documentation: string | null; // Use null instead of undefined if string won't exist
     language?: string; // Optional if not always present

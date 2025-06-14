@@ -7,6 +7,7 @@ type ThemeState = {
 
 const initialState: ThemeState = {
   theme: 'light',
+  mode: undefined
 };
 
 const themeSlice = createSlice({

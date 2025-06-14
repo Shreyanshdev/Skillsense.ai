@@ -11,13 +11,10 @@ import EvaluationForm from '@/components/EvaluationForm/EvaluationForm'; // Impo
 // for useSelector and useDispatch to work in child components like AppLayout, Sidebar, etc.
 
 export default function EvaluationPage() {
-  // This page component is simple: it uses the AppLayout and places its specific content (EvaluationForm) inside.
-  // AppLayout handles the sidebar, mobile navbar, overall page structure, and fixed bottom icons.
-  // EvaluationForm manages its own internal state and UI (like the Focus/Details/Preferences tabs).
+  
 
   return (
     <AppLayout>
-      {/* Render the EvaluationForm component as the content for this page */}
       <EvaluationForm />
     </AppLayout>
   );

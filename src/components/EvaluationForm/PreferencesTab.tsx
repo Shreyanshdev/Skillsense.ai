@@ -171,14 +171,7 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
                         <FaTrashAlt className="mr-1.5" /> Clear All
                     </motion.button>
                     {/* Submit button is unique to this tab */}
-                    <motion.button
-                        type="submit"
-                        disabled={isSubmitDisabled}
-                        onClick={handleSubmit}
-                        className={`${primaryButtonClass} w-full sm:w-auto`}
-                    >
-                        {isSubmitting ? <><FaSpinner className="animate-spin mr-2" /> Generating...</> : <><FiCheckSquare className="mr-2" /> Start Evaluation</>}
-                    </motion.button>
+                    
                 </div>
             </div>
         </div>

@@ -5,68 +5,16 @@ import { HistoryTable } from '@/lib/schema'; // Your Drizzle schema for HistoryT
 
 // MongoDB imports
 import { connectDB } from '@/lib/dbconnect'; // Your MongoDB connection utility
-import User from '@/models/User'; // Your Mongoose User model
-import jwt from 'jsonwebtoken'; // For JWT verification
+import { eq } from 'drizzle-orm';
+import { getMongoUserEmailFromRequest } from '@/utils/auth';
 
 // Ensure MongoDB connection is established for this API route
 connectDB(); // Make sure this connects your Mongoose models
 
-// --- Custom function to get user email from your MongoDB authentication ---
-// This function will:
-// 1. Read the 'token' cookie from the incoming request.
-// 2. Verify the JWT from the cookie.
-// 3. Extract the user ID from the JWT payload.
-// 4. Fetch the user's document from MongoDB using the ID to get their email.
-async function getMongoUserEmailFromRequest(req: NextRequest): Promise<string | null> {
-    const token = req.cookies.get('token')?.value || ''; // Get token from httpOnly cookie
-
-    if (!token) {
-        console.warn("MongoDB Auth: No authentication token found in cookies.");
-        return null;
-    }
-
-    try {
-        // Verify the JWT token
-        // Use your JWT_SECRET from environment variables
-        const decodedToken: any = jwt.verify(token, process.env.JWT_SECRET!);
-
-        // The token payload contains { id: user._id }
-        const userId = decodedToken.id;
-
-        if (!userId) {
-            console.warn("MongoDB Auth: JWT decoded but no userId found.");
-            return null;
-        }
-
-        // Fetch the user from MongoDB using their ID to get the email
-        // We do not select password here, as it's not needed.
-        const user = await User.findById(userId).select('email');
-
-        if (!user) {
-            console.warn(`MongoDB Auth: User with ID ${userId} not found in DB.`);
-            return null;
-        }
-
-        console.log(`MongoDB Auth: User email retrieved: ${user.email}`);
-        return user.email;
-
-    } catch (error) {
-        console.error("MongoDB Auth Error: Failed to verify token or retrieve user:", error);
-        // Specifically catch common JWT errors for better logging
-        if (error instanceof jwt.JsonWebTokenError) {
-            console.error("JWT Error:", error.message);
-        } else if (error instanceof jwt.TokenExpiredError) {
-            console.error("JWT Expired Error:", error.message);
-        }
-        return null;
-    }
-}
-
 
 export async function POST(req : NextRequest) { // Changed 'req : Request' to 'req : NextRequest' for cookie access
     try {
-        const {content ,recordId} = await req.json();
-
+        const {content ,recordId , aiAgentType} = await req.json();
         // Log received data for debugging
         console.log("Received recordId:", recordId);
         console.log("Received content:", content);
@@ -94,7 +42,8 @@ export async function POST(req : NextRequest) { // Changed 'req : Request' to 'r
             recordId: recordId,
             content: content, // The content comes from the frontend request
             userEmail: userEmail, // Email obtained from your MongoDB auth
-            createdAt: new Date().toISOString() // ISO string for createdAt
+            createdAt: new Date().toISOString(), // ISO string for createdAt
+            aiAgentType: aiAgentType // AI agent type from the request
         });
 
         console.log("Database insert result (Drizzle/PostgreSQL):", result);
@@ -120,5 +69,46 @@ export async function POST(req : NextRequest) { // Changed 'req : Request' to 'r
             },
             {status: 500}
         );
+    }
+}
+
+export async function PUT(req:any) {
+
+    try{
+        const {content ,recordId} = await req.json();
+        const result = await db.update(HistoryTable).set({
+            recordId: recordId,
+            content: content, // The content comes from the frontend request
+        }).where(eq(HistoryTable.recordId, recordId)); 
+        return NextResponse.json(result);
+    }catch(e){
+        console.error("Error in /api/history PUT handler:", e);
+        return NextResponse.json({ error: "Failed to update history" }, { status: 500 });
+    }
+    
+}
+
+export async function GET(req: NextRequest) {
+    const{searchParams} = new URL(req.url);
+    const recordId =searchParams.get('recordId') ;
+    const userEmail = await getMongoUserEmailFromRequest(req);
+    try{
+        if(recordId){
+            const result=await db.select().from(HistoryTable).where(eq(HistoryTable.recordId,recordId));
+            return NextResponse.json(result[0]);
+        }
+        else{
+            if (!userEmail) {
+                console.error("Validation Error: User email is null or undefined.");
+                return NextResponse.json({ error: "User email not found" }, { status: 400 });
+            }
+
+            const result = await db.select().from(HistoryTable).where(eq(HistoryTable.userEmail, userEmail));
+            return NextResponse.json(result);
+        }
+        return NextResponse.json({})
+    }catch(e){
+        console.error("Error in /api/history GET handler:", e);
+        return NextResponse.json({ error: "Failed to fetch history" }, { status: 500 });
     }
 }

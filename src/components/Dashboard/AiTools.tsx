@@ -8,7 +8,6 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
-// Ensure your icon paths are correct and these images exist in your public directory
 const aiToolsList = [
   {
     name: 'AI Career Q&A Chat',
@@ -29,7 +28,7 @@ const aiToolsList = [
     desc: 'Generate a personalized step-by-step roadmap tailored to your career goals and skill gaps.',
     icon: '/roadmap.png',
     buttonText: 'Generate Now',
-    path: '/career-roadmap-generator',
+    path: '/ai-roadmap-generator',
   },
   {
     name: 'Cover Letter Generator',
@@ -40,41 +39,75 @@ const aiToolsList = [
   },
 ];
 
+// Animation variants for staggered grid items
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1, // Stagger cards' appearance
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 10
+    },
+  },
+};
+
 export const AiTools = () => {
   const theme = useSelector((state: RootState) => state.theme.theme);
+  const isDark = theme === 'dark';
+
+  // Theme-based colors for the section container
+  const sectionBgClass = isDark ? 'bg-gray-800/60' : 'bg-white/60'; // More glassmorphic
+  const sectionBorderClass = isDark ? 'border-gray-700/50' : 'border-gray-200/50'; // Subtle border
+  const textColorPrimary = isDark ? 'text-white' : 'text-gray-900';
+  const textColorSecondary = isDark ? 'text-gray-300' : 'text-gray-600';
+  const sectionShadowClass = 'shadow-2xl backdrop-blur-md'; // Increased shadow and added backdrop-blur
 
   return (
-    <div className={`p-6 rounded-2xl shadow-xl transition-colors duration-300
-                    ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+    <motion.div
+      initial="hidden"
+      whileInView="visible" // Animate when section comes into view
+      viewport={{ once: true, amount: 0.2 }} // Only animate once, when 20% visible
+      className={`p-6 rounded-2xl ${sectionShadowClass} transition-colors duration-300 ${sectionBgClass} border ${sectionBorderClass}`}
+    >
       <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className='font-bold text-2xl mb-2'
+        variants={itemVariants} // Use itemVariants for titles
+        className={`font-bold text-2xl mb-2 ${textColorPrimary}`}
       >
         Available AI Tools
       </motion.h2>
       <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className={`text-lg mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}
+        variants={itemVariants} // Use itemVariants for paragraphs
+        className={`text-lg mb-6 ${textColorSecondary}`}
       >
         Start building and shaping your career with powerful AI assistance.
       </motion.p>
 
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+      <motion.div
+        variants={containerVariants} // Apply container variants for staggered children
+        className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+      >
         {aiToolsList.map((tool, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: index * 0.05 }} // Staggered animation
+            variants={itemVariants} // Each card uses itemVariants for its animation
           >
             <AiToolCard tool={tool} />
           </motion.div>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

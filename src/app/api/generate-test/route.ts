@@ -12,7 +12,7 @@ type Question = {
   type: QuestionType;
   questionText: string;
   options: string[] | null;
-  correctAnswer: string | number | string[] | null;
+  correctAnswer: string | number | string[] | null; // For MCQs, this can be a string or an array of strings; for coding challenges, it can be a number or null
   difficulty: 'easy' | 'medium' | 'hard';
   relatedSkills: string[];
   testCases: { input: string; output: string }[] | null;
@@ -200,7 +200,7 @@ Schema:
       "type": "multiple-choice" | "coding-challenge" | "theoretical" | "general-aptitude",
       "questionText": string,
       "options": string[] | null,
-      "correctAnswer": any,
+      "correctAnswer": string[],
       "difficulty": "easy" | "medium" | "hard",
       "relatedSkills": string[],
       "testCases": { "input": string, "output": string }[] | null,

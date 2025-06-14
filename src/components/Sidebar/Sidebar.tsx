@@ -1,4 +1,3 @@
-// src/components/Sidebar/Sidebar.tsx
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,18 +7,19 @@ import { toggleTheme } from '@/redux/slices/themeSlice';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  FaHome,
-  FaChartLine,
-  FaBullseye,
-  FaCog,
-  FaSignOutAlt,
-  FaUserCircle,
-  FaAmazonPay,
-} from 'react-icons/fa';
-import { FiMenu, FiX, FiMoon, FiSun } from 'react-icons/fi';
+  FiHome,         // Dashboard
+  FiBarChart2,    // Evaluation
+  FiTarget,       // Goal Tracker
+  FiCreditCard,   // Billing
+  FiSettings,     // Settings
+  FiLogOut,       // Logout
+  FiUser,         // User profile icon
+  FiMoon, FiSun,  // Theme toggle
+  FiChevronLeft,  // Collapse sidebar
+  FiChevronRight, // Expand sidebar
+  FiX             // Mobile close button
+} from 'react-icons/fi';
 import { useState, useEffect, useCallback } from 'react';
-import {v4 as uuidv4} from 'uuid'; // Importing uuid for unique keys
-
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -28,16 +28,39 @@ interface SidebarProps {
   isPinned: boolean;
   setIsPinned: (pinned: boolean) => void;
   isDesktop: boolean;
+  userEmail: string; // Add userEmail prop
+  userName: string;  // Add userName prop
+  loadingUser: boolean; // Add loadingUser prop
 }
 
 const sidebarItems = [
-  { id: 'dashboard', name: 'Dashboard', icon: <FaHome /> },
-  { id: 'evaluation', name: 'Evaluation', icon: <FaChartLine /> },
-  { id: 'goals', name: 'Goal Tracker', icon: <FaBullseye /> },
-  // Consider replacing with more suitable AI icons
-  
-  { id: 'billing' , name:'Billing' , icon:<FaAmazonPay />},
+  { id: 'dashboard', name: 'Dashboard', icon: <FiHome /> },
+  { id: 'evaluation', name: 'Evaluation', icon: <FiBarChart2 /> },
+  { id: 'goals', name: 'Goal Tracker', icon: <FiTarget /> },
+  { id: 'billing', name: 'Billing', icon: <FiCreditCard /> },
 ];
+
+const skillsenseTextVariants = {
+  hidden: { opacity: 0, x: 30, scale: 0.8 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      damping: 15,
+      stiffness: 80,
+      delay: 0.8,
+    },
+  },
+  hover: { // Tilt and Shine on hover
+    rotateY: 5,
+    rotateX: -5,
+    filter: ["brightness(1)", "brightness(1.5)", "brightness(1.0)"], // Shine effect
+    transition: { duration: 0.5, ease: "easeInOut", filter: { repeat: Infinity, duration: 3, ease: "linear" } },
+    perspective: 1000, // For 3D effect
+  },
+};
 
 const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen,
@@ -46,16 +69,22 @@ const Sidebar: React.FC<SidebarProps> = ({
   isPinned,
   setIsPinned,
   isDesktop,
+  userEmail,
+  userName,
+  loadingUser,
 }) => {
   const theme = useSelector((s: RootState) => s.theme.theme);
   const dispatch = useDispatch();
   const pathname = usePathname();
 
   const [isLocallyHovered, setIsLocallyHovered] = useState(false);
-  const isOpen = isPinned || isLocallyHovered || isMobileOpen;
+  const isOpen = (isDesktop && (isPinned || isLocallyHovered)) || isMobileOpen;
+
+  const SIDEBAR_WIDTH_OPEN = 256;
+  const SIDEBAR_WIDTH_CLOSED = 90;
 
   const updateSidebarWidth = useCallback(() => {
-    const newWidth = isOpen ? 256 : 64;
+    const newWidth = isOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED;
     onSidebarWidthChange(newWidth);
   }, [isOpen, onSidebarWidthChange]);
 
@@ -65,22 +94,39 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const togglePin = () => {
     setIsPinned(!isPinned);
-    if (!isPinned) {
+    if (!isPinned && isDesktop) {
       setIsLocallyHovered(false);
     }
   };
 
   const sidebarClasses = `
     fixed top-0 left-0 h-full z-50 overflow-hidden
-    ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}
-    border-r ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}
+    ${theme === 'dark' ? 'bg-gray-900/60 border-gray-700' : 'bg-white/60 border-gray-200'}
+    backdrop-filter backdrop-blur-lg
+    border-r
     transition-transform duration-300 ease-in-out
     ${isDesktop ? '' : (isMobileOpen ? 'translate-x-0' : '-translate-x-full')}
+    ${isDesktop ? 'shadow-lg' : 'shadow-2xl'}
   `;
+
+  const textVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.2 } },
+    exit: { opacity: 0, x: -20, transition: { duration: 0.15 } },
+  };
+
+  // Helper to get initials for the avatar
+  const getUserInitials = (name: string) => {
+    if (!name) return '??';
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name[0].toUpperCase();
+  };
 
   return (
     <>
-      {/* Mobile Overlay */}
       <AnimatePresence>
         {isMobileOpen && !isDesktop && (
           <motion.div
@@ -89,121 +135,159 @@ const Sidebar: React.FC<SidebarProps> = ({
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 z-40"
             onClick={toggleMobileSidebar}
+            aria-label="Close sidebar"
           />
         )}
       </AnimatePresence>
 
       <motion.div
         className={sidebarClasses}
-        initial={{ width: 64 }}
-        animate={{ width: isOpen ? 256 : 64 }}
+        initial={{ width: SIDEBAR_WIDTH_CLOSED }}
+        animate={{ width: isOpen ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         onMouseEnter={() => isDesktop && !isPinned && setIsLocallyHovered(true)}
         onMouseLeave={() => isDesktop && !isPinned && setIsLocallyHovered(false)}
       >
-        <div className="flex flex-col h-full pt-4 pb-4 overflow-y-auto custom-scrollbar">
-          {/* Top Section: Header with Pin/Close Button */}
-          <div className="flex items-center justify-end px-4 py-3 mb-6">
-            {/* Pin/Close Button (only visible when sidebar is open and on desktop) */}
-            {isOpen && isDesktop && (
-              <motion.button
-                onClick={togglePin}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`
-                  p-2 rounded-full transition-colors duration-200
-                  ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
-                  ${isPinned ? (theme === 'dark' ? 'text-sky-400' : 'text-blue-600') : 'text-gray-400'}
-                  text-lg
-                `}
-                aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+        <div className="flex flex-col h-full pt-6 pb-6 overflow-y-auto custom-scrollbar">
+          <div className="flex items-center px-4 mb-8">
+            <motion.div
+              className={`flex items-center ${isOpen ? 'justify-between w-full' : 'justify-center w-full'}`}
+              initial={false}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              {isOpen && (
+                <motion.h1
+                className="text-2xl xl:text-xl sm:text-xl ml-3 font-extrabold leading-tight text-center bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-blue-500 drop-shadow-2xl"
+                variants={skillsenseTextVariants}
+                initial="hidden"
+                animate="visible"
+                whileHover="hover"
               >
-                {isPinned ? <FiX /> : <FiMenu />}
-              </motion.button>
-            )}
+                SkillSense<span className="text-blue-400 ">.AI</span>
+              </motion.h1>
+              )}
 
-            {/* Close button for mobile sidebar when open */}
-            {isMobileOpen && !isDesktop && (
-              <motion.button
-                onClick={toggleMobileSidebar}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`p-2 rounded-full text-xl ${theme === 'dark' ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}
-              >
-                <FiX />
-              </motion.button>
-            )}
+              {(isMobileOpen || isDesktop) && (
+                <motion.button
+                  onClick={isDesktop ? togglePin : toggleMobileSidebar}
+                  whileHover={{ scale: 1.1, rotate: isDesktop && isOpen ? -180 : (isDesktop ? 180 : 0) }}
+                  whileTap={{ scale: 0.9 }}
+                  className={`
+                    p-2 rounded-full transition-colors duration-200 ml-auto
+                    ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}
+                    ${isDesktop && isPinned ? (theme === 'dark' ? 'text-sky-400' : 'text-blue-600') : (theme === 'dark' ? 'text-gray-400' : 'text-gray-600')}
+                    text-xl
+                  `}
+                  aria-label={isDesktop ? (isPinned ? 'Collapse sidebar' : 'Expand sidebar') : 'Close sidebar'}
+                >
+                  {isDesktop ? (isOpen ? <FiChevronLeft /> : <FiChevronRight />) : <FiX />}
+                </motion.button>
+              )}
+            </motion.div>
           </div>
 
-          {/* Navigation Items */}
-          <div className="px-2 space-y-1 flex-1">
+          <div className="px-4 space-y-2 flex-1">
             {sidebarItems.map((item) => (
               <Link
                 key={item.id}
                 href={`/${item.id}`}
-                className={`
-                  group flex items-center
-                  ${isOpen ? 'px-3 py-3 mx-2 justify-start' : 'p-3 justify-center mx-0'}
-                  rounded-xl transition-all duration-200
-                  ${
-                    pathname.includes(item.id)
-                      ? `${theme === 'dark' ? 'bg-sky-900/50 text-sky-400' : 'bg-sky-100 text-sky-700'} `
-                      : `${theme === 'dark' ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'} ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`
-                  }
-                `}
+                passHref
               >
-                <motion.span
-                  className={`text-2xl p-2 shrink-0 ${pathname.includes(item.id) ? 'text-current' : ''}`}
-                  whileHover={{ scale: 1.1 }}
+                <motion.div
+                  className={`
+                    group flex items-center
+                    ${isOpen ? 'justify-start px-4 py-3' : 'justify-center p-3'}
+                    rounded-2xl transition-all duration-300 relative overflow-hidden
+                    ${
+                      pathname.includes(item.id)
+                        ? `${theme === 'dark' ? 'bg-sky-900/40 text-sky-400' : 'bg-sky-100 text-sky-700'} `
+                        : `${theme === 'dark' ? 'hover:bg-gray-700/40' : 'hover:bg-gray-100'} ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`
+                    }
+                    ${isOpen ? '' : 'w-full'}
+                  `}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  {item.icon}
-                </motion.span>
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className={`ml-2 text-sm font-medium whitespace-nowrap overflow-hidden`}
-                    >
-                      {item.name}
-                    </motion.span>
+                  {pathname.includes(item.id) && (
+                      <motion.div
+                          layoutId="active-pill"
+                          className={`absolute inset-0 rounded-2xl -z-1 opacity-70
+                              ${theme === 'dark' ? 'bg-gradient-to-r from-sky-700/30 to-blue-800/30' : 'bg-gradient-to-r from-sky-200/50 to-blue-200/50'}
+                          `}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 50 }}
+                      />
                   )}
-                </AnimatePresence>
+                  <motion.span
+                    className={`text-2xl shrink-0 z-10 ${pathname.includes(item.id) ? 'text-current' : ''}`}
+                  >
+                    {item.icon}
+                  </motion.span>
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.span
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        variants={textVariants}
+                        className={`ml-4 text-base font-medium whitespace-nowrap overflow-hidden z-10`}
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               </Link>
             ))}
           </div>
 
-          {/* Profile & Actions (Moved to bottom and styled consistently) */}
-          <div className={`mt-auto pt-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-            <div className="px-2 space-y-2">
-              {/* User Info (Conditional based on isOpen) */}
+          {/* Profile & Actions */}
+          <div className={`mt-auto px-4 pt-6 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className="space-y-3">
+              {/* User Info - Display fetched data or loading placeholders */}
               <motion.div
-                className={`flex items-center gap-3 p-3 rounded-xl transition-colors duration-200
-                          ${isOpen ? 'justify-start' : 'justify-center'}
+                className={`flex items-center gap-3 py-3 rounded-2xl transition-colors duration-200
+                          ${isOpen ? 'justify-start px-4' : 'justify-center p-3'}
                           ${theme === 'dark' ? 'bg-gray-700/20 hover:bg-gray-700/40' : 'bg-gray-100 hover:bg-gray-200'}
                           cursor-pointer`}
                 whileHover={{ scale: isOpen ? 1.02 : 1 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 flex items-center justify-center shrink-0">
-                  <span className="text-white font-bold text-lg">JD</span>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-sky-400 to-blue-600 flex items-center justify-center shrink-0 shadow-md">
+                  {loadingUser ? (
+                    <div className="animate-pulse bg-gray-400/50 w-full h-full rounded-full"></div>
+                  ) : (
+                    <span className="text-white font-bold text-lg">
+                      {getUserInitials(userName)}
+                    </span>
+                  )}
                 </div>
                 <AnimatePresence>
                   {isOpen && (
                     <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={textVariants}
                       className="flex-1 overflow-hidden"
                     >
-                      <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} whitespace-nowrap overflow-hidden text-ellipsis`}>
-                        John Doe
-                      </p>
-                      <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} whitespace-nowrap overflow-hidden text-ellipsis`}>
-                        john@skillsense.ai
-                      </p>
+                      {loadingUser ? (
+                        <>
+                          <div className="h-4 bg-gray-300/50 animate-pulse rounded w-3/4 mb-1"></div>
+                          <div className="h-3 bg-gray-300/50 animate-pulse rounded w-1/2"></div>
+                        </>
+                      ) : (
+                        <>
+                          <p className={`text-base font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'} whitespace-nowrap overflow-hidden text-ellipsis`}>
+                            {userName || 'Loading User...'}
+                          </p>
+                          <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} whitespace-nowrap overflow-hidden text-ellipsis`}>
+                            {userEmail || 'Loading Email...'}
+                          </p>
+                        </>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -211,23 +295,19 @@ const Sidebar: React.FC<SidebarProps> = ({
 
               {/* Settings, Theme Toggle, Logout Buttons */}
               {[
-                { id: 'settings', name: 'Settings', icon: <FaCog />, color: theme === 'dark' ? 'text-gray-400' : 'text-gray-600', onClick: () => { /* Handle settings logic */ } },
+                { id: 'settings', name: 'Settings', icon: <FiSettings />, color: theme === 'dark' ? 'text-gray-400' : 'text-gray-600', onClick: () => { /* Handle settings logic */ } },
                 { id: 'theme', name: 'Switch Theme', icon: theme === 'dark' ? <FiMoon /> : <FiSun />, color: theme === 'dark' ? 'text-amber-300' : 'text-sky-600', onClick: () => dispatch(toggleTheme()) },
-                { id: 'logout', name: 'Logout', icon: <FaSignOutAlt />, color: theme === 'dark' ? 'text-red-400' : 'text-red-500', 
+                { id: 'logout', name: 'Logout', icon: <FiLogOut />, color: theme === 'dark' ? 'text-red-400' : 'text-red-500',
                   onClick: async () => {
                     try {
                       const res = await fetch('/api/auth/logout', {
                         method: 'POST',
                         credentials: 'include',
                       });
-                  
-                      // DEBUG:
                       console.log('Logout status:', res.status);
-                      console.log('Content-Type:', res.headers.get('content-type'));
                       const text = await res.text();
-                      console.log('Raw response body:', text.slice(0, 200)); 
-                  
-                      // only parse JSON if it’s actually JSON
+                      console.log('Raw response body:', text.slice(0, 200));
+
                       if (res.headers.get('content-type')?.includes('application/json')) {
                         const data = JSON.parse(text);
                         if (res.ok) {
@@ -237,23 +317,26 @@ const Sidebar: React.FC<SidebarProps> = ({
                           console.error('Logout failed:', data.message);
                         }
                       } else {
-                        console.error('Expected JSON but got HTML');
+                        console.error('Expected JSON but got HTML/text:', text);
+                        if (res.ok) {
+                           window.location.href = '/login';
+                        }
                       }
                     } catch (error) {
                       console.error('Logout error:', error);
                     }
                   }
-                                    }
+                }
               ].map(btn => (
                 <motion.button
                   key={btn.id}
                   onClick={btn.onClick}
                   className={`
-                    w-full flex items-center py-3 rounded-xl gap-3 transition-colors duration-200
-                    ${isOpen ? 'justify-start px-3' : 'justify-center'}
-                    ${theme === 'dark' ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'}
+                    w-full flex items-center py-3 rounded-2xl gap-3 transition-colors duration-200 cursor-pointer
+                    ${isOpen ? 'justify-start px-4' : 'justify-center p-3'}
+                    ${theme === 'dark' ? 'hover:bg-gray-700/40' : 'hover:bg-gray-100'}
                   `}
-                  whileHover={{ scale: isOpen ? 1.02 : 1.1 }}
+                  whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <motion.span className={`text-xl shrink-0 ${btn.color}`}>
@@ -262,11 +345,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <AnimatePresence>
                     {isOpen && (
                       <motion.span
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className={`text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        variants={textVariants}
+                        className={`text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis
                                     ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
                                     ${btn.id === 'logout' ? 'text-red-500' : ''}`}
                       >

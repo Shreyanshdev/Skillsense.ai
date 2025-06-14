@@ -41,15 +41,8 @@ export async function POST(request: NextRequest) {
       if (pgUser.length === 0) {
         // User does not exist in PostgreSQL usersTable, insert them
         await db.insert(pgUsersTable).values({
-          // You need to decide how to generate the ID for PostgreSQL.
-          // If 'id' in pgUsersTable is `generatedAlwaysAsIdentity()`, you don't provide it.
-          // If it's a UUID, you might generate it here or pass the MongoDB _id string.
-          // For now, assuming it's auto-generated `integer().primaryKey().generatedAlwaysAsIdentity()`
           name: user.username || user.email.split('@')[0], // Use username from Mongo or derive from email
           email: user.email,
-          // If you have other NOT NULL fields in pgUsersTable, you need to provide them here.
-          // For example, if you want to store a reference to the MongoDB _id:
-          // mongoUserId: user._id.toString()
         });
         console.log(`User ${user.email} synchronized to PostgreSQL usersTable.`);
       } else {

@@ -10,6 +10,12 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
+      { // Add this pattern for Pexels images
+        protocol: "https",
+        hostname: "images.pexels.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
   webpack: (config: { resolve: { fallback: any; }; }) => {

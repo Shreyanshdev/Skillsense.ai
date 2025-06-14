@@ -1,9 +1,3 @@
-// src/components/EvaluationForm/EvaluationForm.tsx
-// Contains the core logic and state for the evaluation form steps (Focus, Details, Preferences)
-// Renders child tab components based on active tab state.
-// Now handles test generation submission and stores data in Redux.
-// Includes: Start Test Confirmation Modal, Local Storage for form progress, "Mixed" coding difficulty.
-// NEW: Mobile responsive tab navigation (hamburger menu) and TRUE full-width display on small screens.
 
 'use client';
 
@@ -518,18 +512,13 @@ const EvaluationForm: React.FC = () => {
 
 
   return (
-     // Outermost container: Ensures full width on mobile, adds vertical padding.
-     // Desktop: max-w-4xl and centering are applied to the *inner* form card.
-     // Removed horizontal padding from this outermost div.
+     
      <div className="w-full py-8 sm:py-12"> {/* Removed px-4 from here */}
         <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            // The actual form card:
-            // w-full: takes full width of its parent (which is now full width on mobile).
-            // sm:max-w-4xl sm:mx-auto: centers and constrains width on desktop.
-            // p-5 sm:p-8: applies internal padding to the card's content on all screens.
+            
             // This is the key change to ensure content has padding while the card itself is full width.
             className={`rounded-xl shadow-3xl lg:shadow-purple-500/30 dark:lg:shadow-sky-500/20 overflow-hidden ${theme === 'dark' ? 'bg-gray-800/80 border-gray-700' : 'bg-white/80 border-gray-200'} backdrop-blur-lg w-full sm:max-w-4xl sm:mx-auto`}
         >

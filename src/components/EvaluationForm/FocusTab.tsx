@@ -394,8 +394,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
                     className={`${selectedSkillPillClass} w-full justify-between`}
                   >
                     <span>{skill.name}</span>
-                    <motion.button
-                          
+                    <motion.button 
                           onClick={(e) => { // Keep stopPropagation
                                             e.stopPropagation();
                                             handleRemoveSkill(skill.id);

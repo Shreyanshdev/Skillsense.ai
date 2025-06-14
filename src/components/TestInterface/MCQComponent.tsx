@@ -16,18 +16,18 @@ interface MCQComponentProps {
   };
   userAnswer: string | null;
   onAnswerChange: (questionId: string, answer: string) => void;
-  theme: 'light' | 'dark'; // Added theme prop
-  isFlagged: boolean; // Added isFlagged prop
-  onToggleFlag: () => void; // Added onToggleFlag prop
+  theme: 'light' | 'dark';
+  isFlagged: boolean; 
+  onToggleFlag: () => void;
 }
 
 const MCQComponent: React.FC<MCQComponentProps> = ({
   question,
   userAnswer,
   onAnswerChange,
-  theme, // Destructure theme
-  isFlagged, // Destructure isFlagged
-  onToggleFlag, // Destructure onToggleFlag
+  theme, 
+  isFlagged, 
+  onToggleFlag, 
 }) => {
   // Assuming useSpeechRecognition hook is available and functional
   const { isListening, transcript, startListening, stopListening } = useSpeechRecognition();

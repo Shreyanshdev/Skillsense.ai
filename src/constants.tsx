@@ -12,6 +12,14 @@ export const SKILL_OPTIONS = [
   { id: 'tailwind', name: 'Tailwind CSS', icon: <FaCode /> },
 ];
 
+export const  SuggestedSkill  = [
+  { id: 'vue', name: 'Vue.js', icon: <FaCode /> },
+  { id: 'angular', name: 'Angular', icon: <FaCode /> },
+  { id: 'graphql', name: 'GraphQL', icon: <FaCode /> },
+  { id: 'docker', name: 'Docker', icon: <FaCode /> },
+  { id: 'kubernetes', name: 'Kubernetes', icon: <FaCode /> },
+]
+
 export const ROLE_OPTIONS = [
   { id: 'frontend', name: 'Frontend Developer', icon: <FaUserTie /> },
   { id: 'backend', name: 'Backend Developer', icon: <FaUserTie /> },

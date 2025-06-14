@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import themeReducer from './slices/themeSlice';
-import formReducer from './formSlice';
-import loadingReducer from './loadingSlice';
+import formReducer from './slices/formSlice';
+import loadingReducer from './slices/loadingSlice';
 import testReducer from './slices/testSlice';
 import chatReducer from './slices/chatSlice';
 

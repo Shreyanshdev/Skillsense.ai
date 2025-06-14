@@ -1,15 +1,15 @@
-// app/layout.tsx
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
-import TopNavbar from '@/components/TopNavbar/TopNavbar';
-import Sidebar from '@/components/Sidebar/Sidebar'; // Your upgraded sidebar component
+import Sidebar from '@/components/Sidebar/Sidebar';
+import GlobalBackground from '@/components/Landing/GlobalBackground';
+import { FiMenu } from 'react-icons/fi';
 
-// Separate Bubbles component (assuming it's here as you provided)
+// Separate Bubbles component - Remains the same
 const Bubbles = ({ theme }: { theme: string }) => {
     const bubbles = useMemo(
       () =>
@@ -45,98 +45,150 @@ const Bubbles = ({ theme }: { theme: string }) => {
 
 const NoSSR_Bubbles = dynamic(() => Promise.resolve(Bubbles), { ssr: false });
 
-// Define constant widths for clarity and consistency
-const SIDEBAR_WIDTH_OPEN = 256; // Tailwinds w-64 is 256px
-const SIDEBAR_WIDTH_CLOSED = 64; // Tailwinds w-16 is 64px, adjusting to your sidebar's default
-const TOP_NAVBAR_HEIGHT_PX = 64; // Assuming TopNavbar has a height of h-16 (64px)
+const SIDEBAR_WIDTH_OPEN = 256;
+const SIDEBAR_WIDTH_CLOSED = 90;
+
+interface UserAuthInfo {
+  email: string;
+  username: string;
+}
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
+  const dispatch = useDispatch();
   const theme = useSelector((state: RootState) => state.theme.theme);
 
-  // States for Sidebar management
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
-  const [currentSidebarWidth, setCurrentSidebarWidth] = useState(SIDEBAR_WIDTH_CLOSED);
+  // State to hold user info
+  const [userAuthInfo, setUserAuthInfo] = useState<UserAuthInfo | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
-  // State to determine if it's a desktop view
+  // Effect to fetch user info
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch('/api/user-info', {
+          credentials: 'include' // Important for sending httpOnly cookie
+        });
+        if (response.ok) {
+          const data: UserAuthInfo = await response.json();
+          setUserAuthInfo(data);
+        } else {
+          // Handle unauthenticated case, e.g., redirect to login
+          console.error('Failed to fetch user info:', response.statusText);
+          // Optional: if not authenticated, redirect to login
+          // window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    fetchUserInfo();
+  }, []); // Run once on mount
+
+  // Effect to apply/remove 'dark' class to the HTML element
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(true);
+  const [currentSidebarWidth, setCurrentSidebarWidth] = useState(SIDEBAR_WIDTH_CLOSED);
   const [isDesktop, setIsDesktop] = useState(false);
+
   useEffect(() => {
     const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024);
+      const desktop = window.innerWidth >= 1024;
+      setIsDesktop(desktop);
+      if (desktop) {
+        setIsSidebarPinned(true);
+      } else {
+        setIsSidebarPinned(false);
+      }
     };
     window.addEventListener('resize', handleResize);
     handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Callback for Sidebar to report its current width
-  const handleSidebarWidthChange = useCallback((width: number) => {
-    setCurrentSidebarWidth(width);
-  }, []);
+  useEffect(() => {
+    if (isDesktop) {
+      setCurrentSidebarWidth(isSidebarPinned ? SIDEBAR_WIDTH_OPEN : SIDEBAR_WIDTH_CLOSED);
+    } else {
+      setCurrentSidebarWidth(0);
+    }
+  }, [isDesktop, isSidebarPinned]);
 
-  // --- LOGIC FOR MAIN CONTENT POSITIONING ---
   const mainContentXOffset = useMemo(() => {
     if (!isDesktop) {
-      return 0; // On mobile, main content stays at x=0 (sidebar overlays)
+      return 0;
     }
     return currentSidebarWidth;
   }, [isDesktop, currentSidebarWidth]);
 
   return (
-    <div className={`min-h-screen relative overflow-hidden ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
-      {/* Animated Background Bubbles */}
-      <div className="fixed inset-0 overflow-hidden z-0">
-        <NoSSR_Bubbles theme={theme} />
+    
+      <div className={`min-h-screen relative overflow-hidden ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-50/50'} transition-colors duration-300`}>
+        <GlobalBackground isDark={theme === 'dark'}></GlobalBackground>
+        <div className="fixed inset-0 overflow-hidden z-0">
+          <NoSSR_Bubbles theme={theme} />
+        </div>
+
+        <div className="flex relative z-10 h-screen">
+          {/* Sidebar Component - Pass userAuthInfo and loading state */}
+          <Sidebar
+            isMobileOpen={isMobileSidebarOpen}
+            toggleMobileSidebar={() => setIsMobileSidebarOpen(false)}
+            onSidebarWidthChange={setCurrentSidebarWidth}
+            isPinned={isSidebarPinned}
+            setIsPinned={setIsSidebarPinned}
+            isDesktop={isDesktop}
+            userEmail={userAuthInfo?.email || ''} // Pass email
+            userName={userAuthInfo?.username || ''} // Pass username
+            loadingUser={loadingUser} // Pass loading state
+          />
+
+          <motion.main
+            animate={{ x: mainContentXOffset }}
+            initial={{ x: isDesktop ? SIDEBAR_WIDTH_CLOSED : 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="flex-1 relative flex flex-col"
+            style={{
+              width: isDesktop ? `calc(100% - ${currentSidebarWidth}px)` : '100%',
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              height: '100vh',
+            }}
+          >
+              {!isDesktop && (
+                  <motion.button
+                      onClick={() => setIsMobileSidebarOpen(true)}
+                      className={`absolute top-4 left-4 p-2 rounded-full z-30 shadow-md
+                          ${theme === 'dark' ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-white text-gray-700 hover:bg-gray-100'}
+                          transition-colors duration-300`}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.5 }}
+                      aria-label="Open sidebar menu"
+                  >
+                      <FiMenu className="w-6 h-6" />
+                  </motion.button>
+              )}
+              
+              <div
+                className="flex-grow overflow-y-auto"
+                style={{ paddingTop: '0px' }}
+              >
+                  {children}
+              </div>
+          </motion.main>
+        </div>
       </div>
-
-      {/* Main Layout Container (Sidebar + Main Content) */}
-      <div className="flex relative z-10 h-screen">
-        {/* Sidebar Component */}
-        <Sidebar
-          isMobileOpen={isMobileSidebarOpen}
-          toggleMobileSidebar={() => setIsMobileSidebarOpen(false)}
-          onSidebarWidthChange={handleSidebarWidthChange}
-          isPinned={isSidebarPinned}
-          setIsPinned={setIsSidebarPinned}
-          isDesktop={isDesktop}
-        />
-
-        {/* Main Content Area */}
-        <motion.main
-          animate={{ x: mainContentXOffset }}
-          initial={{ x: isDesktop ? SIDEBAR_WIDTH_CLOSED : 0 }}
-          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          className="flex-1 relative flex flex-col" // Added flex flex-col here to stack navbar and content
-          style={{
-            width: isDesktop ? `calc(100% - ${currentSidebarWidth}px)` : '100%',
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            height: '100vh',
-          }}
-        >
-            {/* Top Navbar */}
-            <TopNavbar
-              toggleMobileSidebar={() => setIsMobileSidebarOpen(true)}
-              // Add Tailwind classes directly here for fixed positioning and z-index
-              className="fixed top-0 left-0 w-full z-50"
-              style={{
-                // Adjust left property dynamically based on sidebar state
-                left: isDesktop ? `${currentSidebarWidth}px` : '0',
-                width: isDesktop ? `calc(100% - ${currentSidebarWidth}px)` : '100%',
-              }}
-            />
-
-            {/* Inner content wrapper with responsive padding and adjusted top padding */}
-            <div
-              className="flex-grow overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8"
-              style={{ paddingTop: `${TOP_NAVBAR_HEIGHT_PX}px` }} // Add padding to account for fixed navbar
-            >
-                {children}
-            </div>
-        </motion.main>
-      </div>
-    </div>
   );
 };
 
