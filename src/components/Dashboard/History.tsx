@@ -62,18 +62,15 @@ export const History = () => {
 
       setUserHistory(prevHistory => {
         const combined = append ? [...prevHistory, ...newItems] : newItems;
-        // Sort explicitly by createdAt in descending order (latest first)
-        // Ensure createdAt is a valid date string
         return combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       });
 
       setCurrentPage(offset + PAGE_SIZE);
-      setHasMore(newItems.length === PAGE_SIZE); // If we received less than PAGE_SIZE, there are no more items
+      setHasMore(newItems.length === PAGE_SIZE); 
 
     } catch (error) {
       console.error("Failed to fetch history:", error);
-      // Optionally, show a toast or error message
-      setHasMore(false); // Stop trying to load more on error
+      setHasMore(false);
     } finally {
       setLoadingHistory(false);
       setLoadingMore(false);

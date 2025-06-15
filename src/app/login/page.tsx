@@ -7,6 +7,7 @@ import { RootState } from '@/redux/store';
 import { toggleTheme } from '@/redux/slices/themeSlice';
 import { FiArrowRight, FiMail, FiLock, FiSun, FiMoon } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 
 // Assume GlobalBackground component exists at this path
@@ -116,7 +117,7 @@ export default function LoginPage() {
         console.error('Login failed:', data.message);
         setError(data.message || 'Login failed. Please try again.');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login API error:', error);
       setError('An error occurred during login. Please try again later.');
     } finally {

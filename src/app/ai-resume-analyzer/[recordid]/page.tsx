@@ -1,28 +1,33 @@
 "use client";
 import { useParams } from 'next/navigation';
-import React, { use, useEffect, useState } from 'react'
+import React, {useEffect, useState } from 'react'
 import axios from 'axios';
 import AppLayout from '@/components/Layout/AppLayout';
 import ResumeAnalyzer from '@/components/AiResume/Report';
 
 function AiResumeAnalyzer() {
   const {recordid} = useParams();
-  const [pdfUrl , setPdfUrl] = useState();
+  const [pdfUrl, setPdfUrl] = useState<string | undefined>(undefined);
   const [aiReport , setAiReport] = useState();
 
   useEffect(() => {
-     recordid && GetResumeAnalyzerRecord();
+    const GetResumeAnalyzerRecord = async () => {
+      if (typeof recordid === 'string') {
+        try {
+          const result = await axios.get('/api/history?recordId=' + recordid);
+          console.log("Resume Analyzer Record:", result.data);
+          setPdfUrl(result.data?.metadeta);
+          setAiReport(result.data?.content);
+        } catch (error) {
+          console.error("Error fetching resume analyzer record:", error);
+        }
+      }
+    };
+    if (recordid) {
+      GetResumeAnalyzerRecord();
+    }
   }, [recordid]);
 
-  
-  const GetResumeAnalyzerRecord = async () => {
-      const result = await axios.get('/api/history?recordId=' + recordid);
-      console.log("Resume Analyzer Record:", result.data);
-      //@ts-ignore
-      setPdfUrl(result.data?.metadeta);
-      //@ts-ignore
-      setAiReport(result.data?.content);
-  }
   return (
   <AppLayout>
     <div >

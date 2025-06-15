@@ -60,10 +60,6 @@ export async function POST(request: NextRequest) {
     // 1) Dump the whole thing so we can inspect it
     console.log("🏃 Full runStatus:", JSON.stringify(runStatus, null, 2));
 
-    // 2) Safely pull out your AI output
-    const runsArray = Array.isArray(runStatus?.data) ? runStatus.data : [];
-    const firstRun  = runsArray[0] ?? {};
-    const outputObj = firstRun.output;
     // Grab the entire `output` object
   const aiResponse = runStatus.data?.[0]?.output;
 
@@ -78,10 +74,10 @@ export async function POST(request: NextRequest) {
     // Return it directly
     return NextResponse.json({ success: true, result: aiResponse });
   } 
-  catch (err: any) {
-        console.error("❌ /api/ai-resume-analyzer error:", err);
+  catch (error) {
+        console.error("❌ /api/ai-resume-analyzer error:", error);
         return NextResponse.json(
-          { error: err.message || "Internal server error" },
+          { error: (error as Error).message || "Internal server error" },
           { status: 500 }
       );
     }

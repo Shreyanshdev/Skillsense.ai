@@ -7,10 +7,9 @@ interface CodeExecutionRequest {
     language: string; // e.g., 'javascript', 'python', 'java', 'cpp'
     testCases: { input: string; output: string }[]; // Array of public test cases
     questionId?: string; // Optional: Pass question ID for context/logging
-    // Add any other data your backend needs (e.g., userId)
 }
 
-// Define the expected structure of the response body to the frontend
+
 interface CodeExecutionResponse {
     success: boolean;
     compileOutput: string; // Full compilation stdout/stderr
@@ -69,8 +68,6 @@ export async function POST(request: Request) {
             ],
             // Combine all test case inputs into a single stdin string, separated by newlines
             stdin: testCases.map(tc => tc.input).join('\n'),
-            // You can add other options like 'compile_timeout', 'run_timeout', 'compile_memory_limit', 'run_memory_limit'
-            // based on Piston's documentation.
             compile_timeout: 10000, // 10 seconds compile timeout
             run_timeout: 5000, // 5 seconds run timeout per test case (Piston might handle this differently)
         };
@@ -127,9 +124,9 @@ export async function POST(request: Request) {
         //   }
         // }
 
-        let compileOutput = pistonData.compile?.output || '';
-        let runtimeOutput = pistonData.run?.output || ''; // Use combined output for simplicity
-        let isCompilationError = (pistonData.compile?.code || 0) !== 0 || !!pistonData.compile?.stderr;
+        const compileOutput = pistonData.compile?.output || '';
+        const runtimeOutput = pistonData.run?.output || ''; // Use combined output for simplicity
+        const isCompilationError = (pistonData.compile?.code || 0) !== 0 || !!pistonData.compile?.stderr;
         let isRuntimeError = (pistonData.run?.code || 0) !== 0 || !!pistonData.run?.stderr;
 
         // Piston runs the code once with the combined stdin.
@@ -175,7 +172,7 @@ export async function POST(request: Request) {
         // Return the processed results to the frontend
         return NextResponse.json(executionResults, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error in API route /api/execute-code:', error);
         // Return a generic error response to the frontend
         return NextResponse.json({
@@ -185,7 +182,7 @@ export async function POST(request: Request) {
             executionTimeMs: 0,
             memoryUsedKB: 0,
             results: [], // No results on internal server error
-            errorMessage: error.message || 'An unexpected error occurred on the server.',
+            errorMessage: (error as Error).message || 'An unexpected error occurred on the server.',
             isCompilationError: false,
             isRuntimeError: false,
         }, { status: 500 });

@@ -1,6 +1,3 @@
-// src/app/api/get-review-session/route.ts (for App Router)
-// Or src/pages/api/get-review-session.ts (for Pages Router)
-
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbconnect';
 import ReviewSession from '@/models/ReviewSession';
@@ -34,10 +31,10 @@ export async function GET(req: NextRequest) {
         // Convert Mongoose document to a plain JavaScript object before sending
         return NextResponse.json(reviewSession.toObject(), { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error fetching review session:', error);
         return NextResponse.json(
-            { error: `Internal Server Error: ${error.message}` },
+            { error: `Internal Server Error: ${(error as Error).message}` },
             { status: 500 }
         );
     }

@@ -384,9 +384,9 @@ Test Configuration:
       id: testId, // <-- Now 'testId' is correctly defined
     });
 
-  } catch (err: any) {
+  } catch (error) {
     // Centralized error logging and response for API issues
-    console.error('[Generate Test API Error]:', err.message);
-    return NextResponse.json({ error: err.message || 'An unknown error occurred during test generation.' }, { status: 500 });
+    console.error('[Generate Test API Error]:', error);
+    return NextResponse.json({ error: (error as Error).message || 'An unknown error occurred during test generation.' }, { status: 500 });
   }
 }

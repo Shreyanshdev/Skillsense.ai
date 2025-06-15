@@ -2,12 +2,10 @@
 "use client";
 import { AiRoadmapDisplay } from '@/components/AiRoadmap/AiRoadmapDisplay'; // Adjust path
 import AppLayout from '@/components/Layout/AppLayout';
-import App from 'next/app';
-import { useParams } from 'next/navigation';
+import React from 'react';
 
 
 export default function RoadmapPage() {
-  const roadmapId = useParams();
   return (
     <main className="min-h-screen">
       <AppLayout>

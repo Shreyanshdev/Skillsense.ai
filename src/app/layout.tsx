@@ -1,3 +1,4 @@
+import React from 'react'; // Import React
 import { Providers } from '../redux/provider';
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';

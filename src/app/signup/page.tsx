@@ -11,7 +11,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import GlobalBackground from '@/components/Landing/GlobalBackground'; 
 import toast from 'react-hot-toast'; // Import toast
-import { Toaster } from 'react-hot-toast'; // Import Toaster component
+import React from 'react';
 
 
 export default function OnboardingPage() {
@@ -57,17 +57,30 @@ export default function OnboardingPage() {
       }
       setLoading(true);
       try {
-        const { data }: { data: any } = await axios.post('/api/auth/send-otp', { email: formData.email });
+        interface SendOtpResponse {
+            success: boolean;
+            message?: string;
+        }
+
+        const { data }: { data: SendOtpResponse } = await axios.post('/api/auth/send-otp', { email: formData.email });
         if ((data as { success: boolean }).success) {
           setIsOTPSent(true);
           setOtpError(false);
           setIsOTPVerified(false);
           setErrors({ ...errors, email: '' });
         } else {
-          setErrors({ ...errors, email: data.message });
+          setErrors({ ...errors, email: data.message || 'An error occurred' });
         }
-      } catch (err: any) {
-        setErrors({ ...errors, email: err.response?.data?.message || 'Failed to send OTP' });
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          if (axios.isAxiosError(err)) {
+            setErrors({ ...errors, email: err.response?.data?.message || 'Failed to send OTP' });
+          } else {
+            setErrors({ ...errors, email: 'An unexpected error occurred' });
+          }
+        } else {
+          setErrors({ ...errors, email: 'An unexpected error occurred' });
+        }
       } finally {
         setLoading(false);
       }
@@ -81,16 +94,25 @@ export default function OnboardingPage() {
       setLoading(true);
       try {
         const { data } = await axios.post('/api/auth/verify-otp', { email: formData.email, otp });
-        if ((data as any).success) {
+        interface SignupResponse {
+          success: boolean;
+          message?: string;
+        }
+
+        if ((data as SignupResponse).success) {
           setIsOTPVerified(true);
           setOtpError(false);
           setErrors({ ...errors, otp: '' });
         } else {
-          setErrors({ ...errors, otp: (data as any).message });
+          setErrors({ ...errors, otp: (data as { message: string }).message });
           setOtpError(true);
         }
-      } catch (err: any) {
-        setErrors({ ...errors, otp: err.response?.data?.message || 'Verification failed' });
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          setErrors({ ...errors, otp: err.response?.data?.message || 'Verification failed' });
+        } else {
+          setErrors({ ...errors, otp: 'Verification failed' });
+        }
         setOtpError(true);
       } finally {
         setLoading(false);
@@ -120,7 +142,12 @@ export default function OnboardingPage() {
           headers: { 'Content-Type': 'application/json' }
         });
         
-        if ((data as any).success) {
+        interface SignupResponse {
+          success: boolean;
+          errors?: Record<string, string>;
+        }
+
+        if ((data as SignupResponse).success) {
           // Add this line for the success toast
           toast.success('Account created successfully! Please login.', {
             duration: 4000, // Duration in milliseconds
@@ -135,13 +162,22 @@ export default function OnboardingPage() {
             },
           });
           router.push('/login');
-        }else {setErrors({ ...errors, ...(data as any).errors });}
-      } catch (err: any) {
-        setErrors({ ...errors, email: err.response?.data?.message || 'Signup failed' });
-        toast.error(err.response?.data?.message || 'Signup failed. Please try again.', {
-          duration: 4000,
-          position: 'top-center',
-        });
+        } else {
+          const errorsData = data as { errors?: Record<string, string> };
+          setErrors({ ...errors, ...errorsData.errors });
+        }
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+            setErrors({ ...errors, email: err.response?.data?.message || 'Signup failed' });
+        } else {
+            setErrors({ ...errors, email: 'An unexpected error occurred' });
+        }
+        if (axios.isAxiosError(err)) {
+            toast.error(err.response?.data?.message || 'Signup failed. Please try again.', {
+              duration: 4000,
+              position: 'top-center',
+            });
+        } // Close the catch block properly
       } finally {
         setLoading(false);
       }

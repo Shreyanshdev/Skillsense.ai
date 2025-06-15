@@ -11,7 +11,6 @@ import os from 'os'; // For os.tmpdir()
 // --- IMPORTS FOR RESUME PARSING ---
 import PDFParser from 'pdf2json'; // For parsing PDF files
 import mammoth from 'mammoth'; // For parsing DOCX files
-// --- END IMPORTS ---
 
 // Export a named POST function for the App Router
 export async function POST(request: NextRequest) {
@@ -36,8 +35,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File size exceeds 5MB limit.' }, { status: 413 });
     }
 
-  } catch (err: any) {
-    console.error('Error parsing FormData:', err);
+  } catch (error) {
+    console.error('Error parsing FormData:', error);
     return NextResponse.json({ error: 'Failed to process file upload.' }, { status: 500 });
   }
 
@@ -61,14 +60,20 @@ export async function POST(request: NextRequest) {
       let pdfText = '';
 
       await new Promise<void>((resolve, reject) => {
-        pdfParser.on('pdfParser_dataError', (errData: any) => {
+        interface PdfParserError {
+          parserError: string;
+        }
+
+        pdfParser.on('pdfParser_dataError', (errData: PdfParserError) => {
           console.error('pdf2json data error:', errData.parserError);
           reject(new Error(`PDF parsing error: ${errData.parserError}`));
         });
-        pdfParser.on('pdfParser_dataReady', (pdfData: any) => {
-          pdfData.Pages.forEach((page: any) => {
-            page.Texts.forEach((text: any) => {
-              pdfText += decodeURIComponent(text.R[0].T) + ' ';
+        pdfParser.on('pdfParser_dataReady', (pdfData: unknown) => {
+          const pdfPages = (pdfData as { Pages: unknown[] }).Pages;
+          pdfPages.forEach((page) => {
+            (page as { Texts: { R: { T: string }[] }[] }).Texts.forEach((text) => {
+              const textObj = text as { R: { T: string }[] };
+              pdfText += decodeURIComponent(textObj.R[0].T) + ' ';
             });
             pdfText += '\n\n';
           });
@@ -88,8 +93,6 @@ export async function POST(request: NextRequest) {
       resumeFile.type === 'application/msword' || // .doc
       resumeFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // .docx
     ) {
-      // Parse DOCX using mammoth
-      // mammoth expects ArrayBuffer, which we already have from fileBuffer.buffer
       const arrayBuffer = fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength);
       const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
       resumeText = result.value;
@@ -98,8 +101,6 @@ export async function POST(request: NextRequest) {
       // Fallback for plain text files or unsupported types
       console.warn(`Unsupported MIME type for resume parsing: ${resumeFile.type}. Attempting to read as plain text.`);
       resumeText = fileBuffer.toString('utf8');
-      // For a production app, consider returning a 415 Unsupported Media Type error here
-      // return NextResponse.json({ error: `Unsupported file type: ${resumeFile.type}. Please upload PDF or DOCX.` }, { status: 415 });
     }
 
     if (!resumeText.trim()) {
@@ -107,9 +108,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not extract readable text from resume. Please ensure it is a valid document with text content.' }, { status: 400 });
     }
 
-  } catch (parseError: any) {
+  } catch (parseError) {
     console.error('Error parsing resume file:', parseError);
-    return NextResponse.json({ error: `Failed to parse resume file: ${parseError.message}` }, { status: 500 });
+    return NextResponse.json({ error: `Failed to parse resume file: ${(parseError as Error).message}` }, { status: 500 });
   } finally {
     // Clean up the temporary file if it was created
     if (tempFilePath) {
@@ -180,8 +181,8 @@ export async function POST(request: NextRequest) {
       console.warn('Gemini response structure unexpected:', result);
       return NextResponse.json({ error: 'AI did not return a valid response for skills extraction.' }, { status: 500 });
     }
-  } catch (apiError: any) {
+  } catch (apiError ) {
     console.error('Error during Gemini API call:', apiError);
-    return NextResponse.json({ error: apiError.message || 'An error occurred during skill extraction.' }, { status: 500 });
+    return NextResponse.json({ error: (apiError as Error).message || 'An error occurred during skill extraction.' }, { status: 500 });
   }
 }

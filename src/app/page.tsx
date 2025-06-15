@@ -1,4 +1,4 @@
-
+import React from "react";
 import LandingPage from "./landingpage/page";
 
 const Home: React.FC = () => {

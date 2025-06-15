@@ -4,41 +4,52 @@
 import EmptyState from '@/components/AIChat/emptyState';
 import { Input } from '@/components/AIChat/input';
 import AppLayout from '@/components/Layout/AppLayout';
-import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useCallback,  HTMLAttributes } from 'react'; // Re-added HTMLAttributes for our custom type
 import { FiSend } from 'react-icons/fi';
 import { BsStars } from "react-icons/bs";
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import axios from 'axios';
-import Markdown from 'react-markdown';
+import Markdown, { Components } from 'react-markdown'; // Removed 'type CodeProps' import
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialDark, materialLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { useParams, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Volume2, ChevronsUp, History as HistoryIcon, X, PlusCircle } from 'lucide-react'; // Added HistoryIcon
-import { toast } from 'sonner';
+import { Mic, Volume2, ChevronsUp, History as HistoryIcon, X, PlusCircle } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
+
+import { Node } from 'unist'; // Keep Node import for the 'node' prop
 
 // --- Type Definitions ---
-type messages = {
+interface Message {
   content: string;
   role: string;
   type: string;
-};
+}
 interface MessagePart {
   content: string;
   role: 'user' | 'assistant';
   type: 'text';
 }
-// Modified HistoryRecord to include a potential 'title' for sidebar
 interface HistoryRecord {
   recordId: string;
   content: MessagePart[];
   userEmail: string;
   createdAt: string;
-  title?: string; // Added for sidebar display
+  title?: string;
   id?: number;
+  aiAgentType?: string;
+}
+
+// Custom type definition for react-markdown's code component props
+interface CustomMarkdownCodeProps extends HTMLAttributes<HTMLElement> {
+  node?: Node; // Type for the MDAST node
+  inline?: boolean;
+  className?: string;
+  children?: React.ReactNode; // Made optional
+   // Index signature to capture any other arbitrary props (like react-markdown's ExtraProps)
 }
 // --- End Type Definitions ---
 
@@ -47,7 +58,7 @@ function ChatPage() {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [userInput, setUserInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const [messageList, setMessageList] = useState<messages[]>([]);
+  const [messageList, setMessageList] = useState<Message[]>([]);
   const { chatid } = useParams();
   const router = useRouter();
   const theme = useSelector((state: RootState) => state.theme.theme);
@@ -62,14 +73,14 @@ function ChatPage() {
   const currentAudioInstanceRef = useRef<HTMLAudioElement | null>(null);
 
   const [scrolledToBottom, setScrolledToBottom] = useState(true);
-  const [showSidebar, setShowSidebar] = useState(false); // State for sidebar visibility
-  const [chatHistoryList, setChatHistoryList] = useState<HistoryRecord[]>([]); // To store history titles/IDs
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [chatHistoryList, setChatHistoryList] = useState<HistoryRecord[]>([]);
 
   // --- Auto-resize textarea ---
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
-      inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 150) + 'px'; // Max height 150px
+      inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 150) + 'px';
     }
   }, [userInput]);
 
@@ -98,7 +109,7 @@ function ChatPage() {
     if (!userInput.trim()) return;
 
     setLoading(true);
-    const userMessage = { content: userInput, role: 'user', type: 'text' };
+    const userMessage: Message = { content: userInput, role: 'user', type: 'text' };
     setUserInput('');
     setMessageList(prev => [...prev, userMessage]);
 
@@ -106,7 +117,7 @@ function ChatPage() {
       const result = await axios.post('/api/ai-chat', {
         userInput,
       });
-      setMessageList(prev => [...prev, result.data as messages]);
+      setMessageList(prev => [...prev, result.data as Message]);
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error('Failed to send message. Please try again.');
@@ -124,20 +135,10 @@ function ChatPage() {
     }
   };
 
-  // --- API / History Logic ---
-  useEffect(() => {
-    if (chatid) {
-      GetMessageList();
-    } else {
-      setMessageList([{ content: 'Hello! How can I assist you today?', role: 'assistant', type: 'text' }]);
-    }
-    //fetchChatHistoryList(); // Fetch history for sidebar on load/chatid change
-  }, [chatid]);
-
-  const GetMessageList = async () => {
+  const GetMessageList = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await axios.get<HistoryRecord | {}>('/api/history?recordId=' + chatid);
+      const result = await axios.get('/api/history?recordId=' + chatid);
       if ('content' in result.data && Array.isArray(result.data.content) && result.data.content.length > 0) {
         setMessageList(result.data.content as MessagePart[]);
       } else {
@@ -150,44 +151,51 @@ function ChatPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [chatid]);
 
-  useEffect(() => {
-    if (chatid && messageList.length > 0 && !(messageList.length === 1 && messageList[0].role === 'assistant' && messageList[0].content === 'Hello! How can I assist you today?')) {
-      updateMessageList();
-    }
-  }, [messageList, chatid]);
-
-  const updateMessageList = async() => {
+  const updateMessageList = useCallback(async () => {
     try {
       await axios.put('/api/history',{
         content: messageList,
         recordId: chatid,
-        aiAgentType: '/ai-chat' // Specify the AI agent type
-
+        aiAgentType: '/ai-chat'
       })
     } catch (error) {
       console.error("Error updating history:", error);
       toast.error('Failed to save chat progress.');
     }
-  }
+  }, [messageList, chatid]);
 
-  // const fetchChatHistoryList = async () => {
-  //   try {
-  //       // Assuming your /api/history endpoint can return a list of summaries/IDs
+  const fetchChatHistoryList = useCallback(async () => {
+    try {
+        const response = await axios.get<HistoryRecord[]>('/api/history');
+        // Filter history records where aiAgentType is '/ai-chat'
+        const filteredHistory = response.data.filter(record => record.aiAgentType === '/ai-chat');
+        const formattedHistory = filteredHistory.map(record => ({
+            ...record,
+            title: record.title || `Chat ${record.recordId.substring(0, 8)}`
+        }));
+        setChatHistoryList(formattedHistory);
+    } catch (error) {
+        console.error("Error fetching chat history list:", error);
+        toast.error('Failed to load chat history list.');
+    }
+  }, []);
 
-  //       const response = await axios.get<HistoryRecord[]>('/api/history'); // Adjust this endpoint
-  //       // For demonstration, let's create some dummy titles if not provided by backend
-  //       const formattedHistory = response.data.map(record => ({
-  //           ...record,
-  //           title: record.title || `Chat ${record.recordId.substring(0, 8)}` // Fallback to ID if no title
-  //       }));
-  //       setChatHistoryList(formattedHistory);
-  //   } catch (error) {
-  //       console.error("Error fetching chat history list:", error);
-  //       toast.error('Failed to load chat history list.');
-  //   }
-  // };
+  useEffect(() => {
+    if (chatid) {
+      GetMessageList();
+    } else {
+      setMessageList([{ content: 'Hello! How can I assist you today?', role: 'assistant', type: 'text' }]);
+    }
+    fetchChatHistoryList();
+  }, [chatid, GetMessageList, fetchChatHistoryList]);
+
+  useEffect(() => {
+    if (chatid && messageList.length > 0 && !(messageList.length === 1 && messageList[0].role === 'assistant' && messageList[0].content === 'Hello! How can I assist you today?')) {
+      updateMessageList();
+    }
+  }, [messageList, chatid, updateMessageList]);
 
   const onNewChat = async () => {
     const newRecordId = uuidv4();
@@ -195,20 +203,16 @@ function ChatPage() {
       await axios.post('/api/history', {
         recordId: newRecordId,
         content: [],
-        aiAgentType: '/ai-chat', // Specify the AI agent type
+        aiAgentType: '/ai-chat',
       });
       router.push("/ai-chat" + "/" + newRecordId);
-      // Immediately fetch updated list for sidebar
-      //fetchChatHistoryList();
+      fetchChatHistoryList();
     } catch (error) {
       console.error("Error saving history or navigating:", error);
       toast.error('Failed to start a new chat.');
     }
   };
-  // --- End API / History Logic ---
 
-
-  // --- Voice Input (Speech-to-Text) Logic ---
   const startRecording = async () => {
     if (!navigator.mediaDevices) {
       toast.error('Microphone not supported in this browser.');
@@ -226,19 +230,14 @@ function ChatPage() {
       mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         console.log('Audio recorded:', audioBlob);
-        toast.info('Processing audio...');
-        // Placeholder for API call:
-        // const formData = new FormData();
-        // formData.append('audio', audioBlob);
-        // const response = await axios.post('/api/speech-to-text', formData);
-        // setUserInput(response.data.text);
+        toast('Processing audio...');
         setUserInput('This is a simulated voice input for testing purposes.'); // Simulated response
         audioChunksRef.current = [];
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      toast.info('Recording started...');
+      toast('Recording started...');
     } catch (err) {
       console.error('Error accessing microphone:', err);
       toast.error('Error accessing microphone. Please allow access.');
@@ -249,12 +248,10 @@ function ChatPage() {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      toast.info('Recording stopped.');
+      toast('Recording stopped.');
     }
   };
-  // --- End Voice Input Logic ---
 
-  // --- Text-to-Speech (AI Response Playback) Logic ---
   const speakText = useCallback(async (text: string) => {
     if (currentAudioInstanceRef.current) {
         currentAudioInstanceRef.current.pause();
@@ -263,7 +260,7 @@ function ChatPage() {
     }
 
     try {
-        toast.info('Generating speech...');
+        toast('Generating speech...');
         const response = await axios.post('/api/text-to-speech', { text }, { responseType: 'blob' });
         const audioBlob = new Blob([response.data as ArrayBuffer], { type: 'audio/mpeg' });
         const audioUrl = URL.createObjectURL(audioBlob);
@@ -286,62 +283,43 @@ function ChatPage() {
         toast.error('Failed to convert text to speech.');
     }
   }, []);
-  // --- End Text-to-Speech Logic ---
 
-
-  // --- Theme-dependent classes ---
   const isDark = theme === 'dark';
-  // Overall chat page background - transparent, relies on parent for blur
   const chatAreaBgClass = isDark
-  ? "bg-gray-900/40 backdrop-blur-lg" // Dark transparent with blur
+  ? "bg-gray-900/40 backdrop-blur-lg"
   : "bg-white/40 backdrop-blur-lg";
-  // Input container background - RESTORED previous, opaque background
-  const inputContainerBgClass = isDark ? 'bg-gray-900' : 'bg-white';
 
-  // Message bubble styles
   const userBubbleBg = 'bg-gradient-to-br from-sky-500 to-blue-600';
   const userBubbleText = 'text-white';
-  const assistantBubbleBg = isDark ? 'bg-gray-800' : 'bg-gray-100'; // RESTORED opaque
+  const assistantBubbleBg = isDark ? 'bg-gray-800' : 'bg-gray-100';
   const assistantBubbleText = isDark ? 'text-gray-200' : 'text-gray-900';
-  const assistantBubbleShadow = isDark ? 'shadow-md' : 'shadow-md'; // Subtle shadow
+  const assistantBubbleShadow = isDark ? 'shadow-md' : 'shadow-md';
 
-  const inputBorderClass = isDark ? 'border-gray-700' : 'border-gray-300'; // More subtle border
-  const inputBgClass = 'bg-transparent'; // Input itself is transparent to show parent's background
+  const inputBorderClass = isDark ? 'border-gray-700' : 'border-gray-300';
+  const inputBgClass = 'bg-transparent';
   const inputTextColor = isDark ? 'text-gray-100' : 'text-gray-900';
   const inputPlaceholderColor = isDark ? 'placeholder-gray-400' : 'placeholder-gray-500';
-  const inputShadowClass = 'shadow-lg shadow-blue-500/20 dark:shadow-sky-500/10'; // Input container shadow
-  const inputFocusEffect = `focus-within:ring-2 focus-within:ring-blue-500/50 dark:focus-within:ring-sky-500/50 focus-within:shadow-xl focus-within:shadow-blue-500/30 dark:focus-within:shadow-sky-500/20`; // On writing effect
+  const inputShadowClass = 'shadow-lg shadow-blue-500/20 dark:shadow-sky-500/10';
+  const inputFocusEffect = `focus-within:ring-2 focus-within:ring-blue-500/50 dark:focus-within:ring-sky-500/50 focus-within:shadow-xl focus-within:shadow-blue-500/30 dark:focus-within:shadow-sky-500/20`;
 
-
-  // Button styles (Send, New Chat, Mic, Speaker)
   const primaryBtnBg = 'bg-gradient-to-br from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700';
   const primaryBtnText = 'text-white';
-  const disabledBtnBg = isDark ? 'bg-gray-700' : 'bg-gray-200'; // RESTORED opaque
-  const disabledBtnText = isDark ? 'text-gray-400' : 'text-gray-500';
 
-  // Header text gradient
   const headerTextGradient = isDark ? 'bg-gradient-to-r from-sky-400 to-blue-600' : 'bg-gradient-to-r from-blue-600 to-sky-700';
 
-  // --- Framer Motion Variants for messages ---
-  const messageVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.2, ease: "easeIn" } }
-  };
-
   // --- Custom Markdown Renderer for Code Blocks ---
-  const components = {
-    code({node, inline, className, children, ...props}: any) {
+  const components: Components = {
+    code({ node, inline, className, children, ...props }: CustomMarkdownCodeProps) { // Using the type-safe CustomMarkdownCodeProps again
       const match = /language-(\w+)/.exec(className || '');
       return !inline && match ? (
         <SyntaxHighlighter
-          style={isDark ? materialDark : materialLight}
+          style={isDark ? materialDark as any : materialLight as any} // Cast style to any
           language={match[1]}
           PreTag="div"
           {...props}
           className="rounded-md"
         >
-          {String(children).replace(/\n$/, '')}
+          {String(children || '').replace(/\n$/, '')} {/* Ensure children is treated as string, handle undefined/null */}
         </SyntaxHighlighter>
       ) : (
         <code className={className} {...props}>
@@ -356,6 +334,7 @@ function ChatPage() {
 
   return (
     <AppLayout>
+      <Toaster position="top-center" reverseOrder={false} />
       <div className={`flex h-full w-full ${chatAreaBgClass} transition-colors duration-300 font-sans relative -mb-9`}>
         {/* New Chat Button - Fixed Top-Left */}
         <motion.button
@@ -367,10 +346,10 @@ function ChatPage() {
                      shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:ring-offset-2
                      ${isDark ? 'focus:ring-offset-gray-900' : 'focus:ring-offset-white'} cursor-pointer
                      transform hover:-translate-y-0.5
-                     lg:px-6 lg:py-3 lg:text-lg`} // Larger on desktop
+                     lg:px-6 lg:py-3 lg:text-lg`}
         >
           <BsStars className="h-5 w-5 lg:h-6 lg:w-6" />
-          <span className="hidden sm:inline">New Chat</span> {/* Hidden on small, shown on sm+ */}
+          <span className="hidden sm:inline">New Chat</span>
         </motion.button>
 
         {/* Main Content Area (Chat + Input) */}
@@ -398,11 +377,15 @@ function ChatPage() {
                             {messageList.map((message, index) => (
                             <motion.div
                                 key={`msg-${index}-${message.role}`}
-                                variants={messageVariants}
+                                variants={{
+                                  hidden: { opacity: 0, y: 20 },
+                                  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+                                  exit: { opacity: 0, y: -20, transition: { duration: 0.2, ease: "easeIn" } }
+                                }}
                                 initial="hidden"
                                 animate="visible"
                                 exit="exit"
-                                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} items-start group`} // Align items-start
+                                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} items-start group`}
                             >
                                 <div
                                 className={`max-w-[80%] p-4 rounded-xl shadow-md ${
@@ -440,7 +423,11 @@ function ChatPage() {
                         {loading && (
                             <motion.div
                             key="loading-indicator"
-                            variants={messageVariants}
+                            variants={{
+                              hidden: { opacity: 0, y: 20 },
+                              visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+                              exit: { opacity: 0, y: -20, transition: { duration: 0.2, ease: "easeIn" } }
+                            }}
                             initial="hidden"
                             animate="visible"
                             className="flex justify-start"
@@ -475,7 +462,7 @@ function ChatPage() {
                 )}
             </div>
 
-            
+
             {/* Input Area - Replicated Gemini's input bar with enhancements */}
               <div className={`sticky bottom-0 left-0 right-0 w-full z-20 py-4 px-4 sm:px-6 lg:px-8 `}>
                 <div className="w-full max-w-4xl mx-auto">
@@ -485,9 +472,8 @@ function ChatPage() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => setShowMoreOptions(!showMoreOptions)}
-                          className={`flex items-center justify-center p-3 rounded-full absolute left-2 bottom-2 z-10 cursor-pointer 
-                                    ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}
-                                    transition-colors duration-200`}
+                          className={`flex items-center justify-center p-3 rounded-full absolute left-2 bottom-2 z-10 cursor-pointer
+                                    ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}
                           aria-label="More options"
                         >
                           {showMoreOptions ? <X size={24} /> : <PlusCircle size={24} />}
@@ -505,7 +491,6 @@ function ChatPage() {
                               handleSendMessage();
                             }
                           }}
-                          // Adjusted padding to accommodate the buttons
                           className={`flex-1 !py-4 pl-14 pr-24 text-lg rounded-3xl resize-none ${inputTextColor} ${inputPlaceholderColor} bg-transparent focus:ring-0 `}
                           rows={1}
                         />
@@ -518,7 +503,7 @@ function ChatPage() {
                           className={`absolute right-14 bottom-3 flex items-center justify-center p-3 mr-1.5 rounded-full transition-all duration-300 ease-out shrink-0 cursor-pointer
                             ${isRecording ? 'bg-red-500 text-white animate-pulse' : `${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`} `}
                           aria-label={isRecording ? "Stop recording" : "Start recording voice input"}
-                          title={isRecording ? "Stop Recording" : "Voice Input (Coming Soon)"} // Tooltip
+                          title={isRecording ? "Stop Recording" : "Voice Input (Coming Soon)"}
                         >
                           <Mic className="w-5 h-5" />
                         </motion.button>
@@ -607,7 +592,7 @@ function ChatPage() {
                                         whileHover={{ x: 5 }}
                                         onClick={() => {
                                             router.push(`/ai-chat/${record.recordId}`);
-                                            setShowSidebar(false); // Close sidebar on selection
+                                            setShowSidebar(false);
                                         }}
                                         className={`block w-full text-left p-2 rounded-lg text-sm
                                                     ${isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'}
@@ -631,7 +616,7 @@ function ChatPage() {
             onClick={() => setShowSidebar(!showSidebar)}
             className={`fixed top-4 right-4 z-50 p-3 rounded-full shadow-lg transition-all duration-300
                        ${isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white text-gray-800 hover:bg-gray-100'}
-                       lg:hidden`} // Only show on smaller screens
+                       lg:hidden`}
             aria-label="Toggle chat history"
         >
             <HistoryIcon size={24} />

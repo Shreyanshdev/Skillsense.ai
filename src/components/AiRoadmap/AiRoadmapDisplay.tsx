@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import axios from 'axios';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import { BarChart2, BookOpen, Loader2, ExternalLink, Calendar, User, Target, Map as MapIcon } from 'lucide-react';
 
 // React Flow Imports
@@ -54,7 +54,7 @@ export const AiRoadmapDisplay: React.FC = () => {
     const fetchRoadmap = async () => {
       try {
         const response = await axios.get(`/api/history?recordId=${roadmapId}`);
-        //@ts-ignore
+
         const data = response.data.content; // Assuming content directly holds the AiRoadmapResponse
         setRoadmapData(data);
 
@@ -64,9 +64,8 @@ export const AiRoadmapDisplay: React.FC = () => {
           type: node.type || 'turbo', // Ensure type is set, default to 'turbo'
         })));
         setEdges(data.flowRoadmap.initialEdges);
-      } catch (err: any) {
-        console.error("Failed to fetch roadmap:", err);
-        setError(err.response?.data?.error || 'Failed to load roadmap.');
+      } catch (error) {
+        console.error("Failed to fetch roadmap:", error);
         toast.error('Failed to load roadmap. Please try again.');
       } finally {
         setLoading(false);

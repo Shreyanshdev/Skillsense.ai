@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { FiMail, FiLock, FiArrowRight } from 'react-icons/fi';
+import React from 'react';
 
 export default function ResetPage() {
   const [step, setStep] = useState<'email' | 'otp' | 'reset'>('email');

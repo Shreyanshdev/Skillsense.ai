@@ -9,7 +9,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { toggleTheme } from '@/redux/slices/themeSlice';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 import { TestData, TestState, Question } from '@/types/index';
 import { v4 as uuidv4 } from 'uuid';
@@ -146,7 +146,6 @@ const TestInterfacePage: React.FC = () => {
       const questionsForEvaluation = testData.rounds.flatMap(round =>
         round.questions.map(question => {
           const userAnswerValue = userAnswers[question.id] || ''; // Get user's answer from Redux state, default to empty string
-          const isFlagged = flaggedQuestions.includes(question.id); // Check if question is flagged
 
           // Structure the object to include all necessary data for backend evaluation
           const questionData: any = { // Use 'any' temporarily or define a more specific type if needed
@@ -157,8 +156,8 @@ const TestInterfacePage: React.FC = () => {
           };
 
           if (question.type === 'multiple-choice' || question.type === 'general-aptitude') {
-            questionData.options = (question as any).options;
-            questionData.correctAnswer = (question as any).correctAnswer; 
+            questionData.options = (question ).options;
+            questionData.correctAnswer = (question ).correctAnswer; 
           } 
 
           return questionData;

@@ -53,26 +53,22 @@ export async function POST(req : NextRequest) { // Changed 'req : Request' to 'r
             data: result
         }, {status: 200});
     }
-    catch(e : any){
+    catch(error){
         // Comprehensive error logging
-        console.error("Error in /api/history POST handler:", e);
-        console.error("Error message:", e.message);
-        if (e.stack) {
-            console.error("Error stack:", e.stack);
-        }
+        console.error("Error in /api/history POST handler:", error);
+        console.error("Error message:", (error as Error).message);
 
         // Return a more informative error response during development
         return NextResponse.json(
             {
                 error: "Failed to save history due to a server error.",
-                details: process.env.NODE_ENV === 'development' ? e.message : undefined // Show details only in dev
             },
             {status: 500}
         );
     }
 }
 
-export async function PUT(req:any) {
+export async function PUT(req: NextRequest) {
 
     try{
         const {content ,recordId} = await req.json();

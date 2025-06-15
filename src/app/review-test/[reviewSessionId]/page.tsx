@@ -1,7 +1,7 @@
 // src/app/review-test/[reviewSessionId]/page.tsx
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef} from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { EvaluationReport, QuestionResult } from '@/types/evaluation';
 import DOMPurify from 'dompurify';
@@ -73,9 +73,9 @@ const ReviewTestPage: React.FC = () => {
         }
         const data: EvaluationReport = await response.json();
         setEvaluationReport(data);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Error fetching evaluation report:', err);
-        setError(err.message || 'An unexpected error occurred while fetching the report.');
+        setError((err as Error).message || 'An unexpected error occurred while fetching the report.');
       } finally {
         setLoading(false);
       }

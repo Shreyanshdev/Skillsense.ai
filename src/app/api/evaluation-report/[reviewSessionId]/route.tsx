@@ -1,7 +1,3 @@
-// src/app/api/evaluation-report/[reviewSessionId]/route.ts
-
-// No "use client"; directive here. This is a Server Function (API Route).
-
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db'; // Your Drizzle DB client
 import { HistoryTable } from '@/lib/schema'; // Your Drizzle schema for HistoryTable
@@ -42,7 +38,12 @@ export async function GET(
     if (typeof record.content === 'string') {
       try {
         evaluationReport = JSON.parse(record.content) as EvaluationReport;
-      } catch (jsonError: any) {
+      } catch (jsonError: unknown) {
+        if (jsonError instanceof Error) {
+          console.error(`[${new Date().toISOString()}] Error parsing content for reviewSessionId ${reviewSessionId}:`, jsonError.message);
+        } else {
+          console.error(`[${new Date().toISOString()}] Error parsing content for reviewSessionId ${reviewSessionId}:`, jsonError);
+        }
         console.error(`[${new Date().toISOString()}] Error parsing content for reviewSessionId ${reviewSessionId}:`, jsonError);
         return NextResponse.json({ error: 'Failed to parse stored evaluation report content.' }, { status: 500 });
       }

@@ -34,12 +34,12 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, message: "Password reset successfully." }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Reset password API error:", error);
 
         // Handle Mongoose validation errors (e.g., password minlength if defined in schema)
-        if (error.name === 'ValidationError') {
-             const messages = Object.values(error.errors).map((val: any) => (val as any).message);
+        if (typeof error === 'object' && error !== null && 'name' in error && error.name === 'ValidationError') {
+             const messages = Object.values((error as unknown as { errors: Record<string, { message: string }> }).errors).map((val) => val.message);
              return NextResponse.json({ success: false, message: messages.join(', ') }, { status: 400 });
         }
 

@@ -76,8 +76,8 @@ export default function FinalReportPage() {
         const res = await fetch(`/api/evaluation-report/${reviewSessionId}`);
         if (!res.ok) throw new Error('Failed to load report. Please try again.');
         setReport(await res.json());
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e) {
+        setError(e as string);
       } finally {
         setLoading(false);
       }
@@ -188,7 +188,7 @@ export default function FinalReportPage() {
               <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={renderMarkdown(report.llmInsights.summaryAboutCandidate)} />
               {report.llmInsights.motivationalQuote && (
                 <p className={`mt-4 text-sm italic ${textColorSecondary} border-t ${borderColor} pt-3`}>
-                  "{report.llmInsights.motivationalQuote}"
+                  &quot;{report.llmInsights.motivationalQuote}&quot;
                 </p>
               )}
             </motion.div>
