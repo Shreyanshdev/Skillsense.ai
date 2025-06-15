@@ -11,7 +11,6 @@ import EvaluationForm from '@/components/EvaluationForm/EvaluationForm'; // Impo
 // for useSelector and useDispatch to work in child components like AppLayout, Sidebar, etc.
 
 export default function EvaluationPage() {
-  
 
   return (
     <AppLayout>

@@ -44,7 +44,7 @@ interface TestDataWithRounds extends TestData {
 type QuestionStatus = 'attempted' | 'non-attempted' | 'skipped' | 'flagged';
 
 
-const TestInterfacePage: React.FC = () => {
+function TestInterfacePage () {
   const theme = useSelector((state: RootState) => state.theme.theme);
 
   const testState: TestState = useSelector((state: RootState) => state.test);

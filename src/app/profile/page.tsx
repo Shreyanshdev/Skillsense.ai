@@ -1,10 +1,10 @@
-import AppLayout from '@/components/Layout/AppLayout'
+import AppLayout from '@/components/Layout/AppLayout';
 import React from 'react';
 
-export const Profile = () => {
+export default function Page() {
   return (
-    <div>
-        <h1>Coming Soon</h1>
-    </div>
-  )
+    <AppLayout>
+      <h1>Coming Soon</h1>
+    </AppLayout>
+  );
 }

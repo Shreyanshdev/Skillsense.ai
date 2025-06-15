@@ -19,7 +19,7 @@ marked.setOptions({
   breaks: true,
 });
 
-const ReviewTestPage: React.FC = () => {
+function ReviewTestPage () {
   const params = useParams();
   const router = useRouter();
   const reviewSessionId = params.reviewSessionId as string;
