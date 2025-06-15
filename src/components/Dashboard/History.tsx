@@ -1,10 +1,10 @@
 // src/components/Dashboard/History.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react'; // Removed useMemo
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { FiArrowRight } from 'react-icons/fi'; // Removed FiSearch
+import { motion, Variants } from 'framer-motion';
+import { FiArrowRight } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -66,7 +66,7 @@ export const History = () => {
       });
 
       setCurrentPage(offset + PAGE_SIZE);
-      setHasMore(newItems.length === PAGE_SIZE); 
+      setHasMore(newItems.length === PAGE_SIZE);
 
     } catch (error) {
       console.error("Failed to fetch history:", error);
@@ -144,7 +144,7 @@ export const History = () => {
   const primaryButtonShadow = 'shadow-lg hover:shadow-blue-500/50';
 
   // Variants for the empty state box
-  const emptyBoxVariants = {
+  const emptyBoxVariants : Variants = {
     hidden: { opacity: 0, scale: 0.9, y: 20 },
     visible: {
       opacity: 1,
@@ -181,7 +181,7 @@ export const History = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className={`text-lg mb-6 ${textColorSecondary}`}
       >
-        What you've previously worked on can be found here.
+        What you&apos;ve previously worked on can be found here.
       </motion.p>
 
       {/* Removed Search Field UI */}
@@ -206,7 +206,7 @@ export const History = () => {
             className='mx-auto my-5 opacity-80 animate-pulse-slow'
           />
           <h3 className={`text-xl font-semibold mb-2 ${textColorPrimary}`}>
-            You don't have any history yet!
+            You don&apos;t have any history yet!
           </h3>
           <p className={`text-base text-center mb-4 ${textColorSecondary}`}>
             Start exploring our AI tools to generate your first career insights.

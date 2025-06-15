@@ -539,7 +539,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
           disabled={isResumeOnlyAssessment}
         >
           <p className={`mb-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            E.g., &quotFocus on advanced React hooks and state management for e-commerce.&quot
+            E.g. , &quot; &quotFocus on advanced React hooks and state management for e-commerce.&quot;
           </p>
           <motion.textarea
             value={userPrompt}

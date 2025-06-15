@@ -10,7 +10,7 @@ import { RootState } from '@/redux/store';
 import { setTestData, setTestLoading, setTestError, clearTestData } from '@/redux/slices/testSlice';
 import debounce from 'lodash.debounce';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 // Import the new tab components
 import FocusTab from './FocusTab';
@@ -111,7 +111,7 @@ const EvaluationForm: React.FC = () => {
         setCodingDifficulty(parsedData.codingDifficulty || 'medium');
         setSelectedRole(parsedData.selectedRole || '');
         setRoleInput(parsedData.selectedRole || '');
-        toast.info('Loaded saved form progress!');
+        toast.success('Loaded saved form progress!');
       }
     } catch (e) {
       console.error("Failed to load form data from local storage", e);
@@ -217,7 +217,7 @@ const EvaluationForm: React.FC = () => {
                 toast.success('Resume analyzed successfully!');
             } else {
                 setAnalyzedSkills([]);
-                toast.info('Resume analyzed, but no specific skills found.');
+                toast.success('Resume analyzed, but no specific skills found.');
             }
         } catch (err: any) {
             console.error('Resume analysis error:', err);
@@ -252,7 +252,7 @@ const EvaluationForm: React.FC = () => {
     dispatch(clearTestData());
     dispatch(setTestError(null));
     localStorage.removeItem('evaluationFormData');
-    toast.info('All form data cleared!');
+    toast.success('All form data cleared!');
   };
 
   const handleProficiencySelect = (skillId: string, levelId: string) => {

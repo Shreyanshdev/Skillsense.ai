@@ -3,8 +3,6 @@ import { inngest } from "./client";
 import ImageKit from "imagekit";
 import { db } from "@/lib/db";
 import { HistoryTable } from "@/lib/schema";
-import { create } from "axios";
-
 
 
 export const AiCareerChatAgent = createAgent({
@@ -172,7 +170,7 @@ export const AiCareerAgent = inngest.createFunction(
     },
 )
 
-var imagekit = new ImageKit({
+const imagekit = new ImageKit({
     publicKey : process.env.IMAGEKIT_PUBLIC_KEY! ,
     privateKey : process.env.IMAGEKIT_PRIVATE_KEY!,
     urlEndpoint : process.env.IMAGEKIT_URL_ENDPOINT!
@@ -195,7 +193,7 @@ export const AiResumeAgent = inngest.createFunction(
             return imageKitFile.url;
         })
         const aiResumeReport = await AiResumeAnalyzerAgent.run(pdfText);
-        //@ts-ignore
+        //@ts-expect-error
         const rawContent =aiResumeReport.output[0]?.content;
         const rawContentJson = rawContent.replace('```json','').replace('```','');
         const parseJson =JSON.parse(rawContentJson);
@@ -375,14 +373,13 @@ export const AiRoadmapAgent = inngest.createFunction(
 
     // 2a) Run the AI
     const aiRes = await AiRoadmapGeneratorAgent.run(`UserInput:${userInput} timeDuration:${timeDuration || "4_6_months"}`);
-    //@ts-ignore
+    //@ts-expect-error
     const rawContent = aiRes.output[0]?.content || "";
 
     // 2b) Clean and parse
     const rawContentJson = rawContent.replace('```json','').replace('```','');
     const parseJson =JSON.parse(rawContentJson);
 
-    
 
     // 2c) Save to DB
     const saveToDb =await step.run("SaveRoadmapToDb", async () => {
