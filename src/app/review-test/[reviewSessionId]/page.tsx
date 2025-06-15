@@ -11,7 +11,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from '@/redux/slices/themeSlice';
 import type { RootState, AppDispatch } from '@/redux/store';
 import { ExternalLinkIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 // Initialize marked for markdown parsing
 marked.setOptions({
@@ -171,7 +171,7 @@ const ReviewTestPage: React.FC = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
