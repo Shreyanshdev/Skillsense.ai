@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import GlobalBackground from '@/components/Landing/GlobalBackground'; 
 import toast from 'react-hot-toast'; // Import toast
 import React from 'react';
-import axios, { isAxiosError } from 'axios';
+import axios from 'axios';
 import type { AxiosError } from 'axios';
 
 
