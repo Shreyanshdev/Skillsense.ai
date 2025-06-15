@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, useViewportScroll, useSpring, useTransform } from 'framer-motion';
+import { motion, useViewportScroll, useSpring, useTransform, Variants } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight, Sparkles, Zap } from 'lucide-react';
+import Image from 'next/image';
 // import GlobalBackground from './GlobalBackground'; // Remove or comment out if you don't want a background from this component
 // BrandScroll, TestimonialSection, PricingSection, Footer are not in this file, so they are not directly affected by this change.
 
@@ -138,13 +139,13 @@ const FeatureSection: React.FC<FeatureSectionProps> = ({ isDark , onGetStarted }
   }, []);
 
   // Define Framer Motion variants for section
-  const sectionVariants = {
+  const sectionVariants: Variants = {
     hidden: { opacity: 0, y: 100, transition: { duration: 0.6, ease: "easeOut" } },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
   };
 
   // Variants for staggered children animations
-  const containerVariants = {
+  const containerVariants : Variants= {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -155,7 +156,7 @@ const FeatureSection: React.FC<FeatureSectionProps> = ({ isDark , onGetStarted }
     },
   };
 
-  const itemVariants = {
+  const itemVariants : Variants= {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
@@ -297,9 +298,11 @@ const FeatureSection: React.FC<FeatureSectionProps> = ({ isDark , onGetStarted }
             <div className={`relative overflow-hidden rounded-2xl p-1
               ${isDark ? 'bg-gradient-to-br from-sky-400/20 to-blue-500/20' : 'bg-gradient-to-br from-blue-400/20 to-indigo-500/20'}`}>
               <div className="relative overflow-hidden rounded-xl">
-                <img
+                <Image
                   src={currentFeature?.imageSrc}
                   alt={currentFeature?.title}
+                  width={800}
+                  height={600}
                   className="w-full h-96 object-cover"
                 />
 
