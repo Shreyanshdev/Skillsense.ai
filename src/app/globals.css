@@ -288,6 +288,29 @@ body {
   }
 }  
 
+.shadow-glow-form-dark {
+  box-shadow:
+    0 0 15px rgba(0,0,0,0.3),
+    0 0 30px rgba(56, 189, 248, 0.15); /* Sky-400 subtle glow */
+}
+.shadow-glow-form-light {
+  box-shadow:
+    0 0 15px rgba(0,0,0,0.1),
+    0 0 30px rgba(59, 130, 246, 0.1); /* Blue-500 subtle glow */
+}
+
+/* Grid Pattern Background for Left Panel (now on transparent background) */
+.bg-grid-pattern-dark {
+  background-image: linear-gradient(to right, rgba(55, 65, 81, 0.2) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(55, 65, 81, 0.2) 1px, transparent 1px);
+  background-size: 50px 50px; /* Larger grid for visual impact */
+}
+.bg-grid-pattern-light {
+  background-image: linear-gradient(to right, rgba(209, 213, 219, 0.3) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(209, 213, 219, 0.3) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

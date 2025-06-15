@@ -2,7 +2,7 @@
 // (No changes to existing imports, just adding ResumeChatbot)
 "use client";
 import React, { useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "@/redux/slices/themeSlice";
 // NEW IMPORT
@@ -106,7 +106,7 @@ function ResumeAnalyzer({ aiReport, pdfUrl }: any) {
     </ul>
   );
 
-  const containerVariants = {
+  const containerVariants:Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -117,7 +117,7 @@ function ResumeAnalyzer({ aiReport, pdfUrl }: any) {
     },
   };
 
-  const itemVariants = {
+  const itemVariants:Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,

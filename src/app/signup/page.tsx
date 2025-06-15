@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux'; 
 import { RootState } from '@/redux/store';
 import { toggleTheme } from '@/redux/slices/themeSlice';
@@ -186,7 +186,7 @@ export default function OnboardingPage() {
     // --- Framer Motion Variants ---
 
     // Framer Motion Variants for the "SkillSense.AI" text in the left panel
-    const skillsenseTextVariants = {
+    const skillsenseTextVariants :Variants = {
       hidden: { opacity: 0, y: 50, scale: 0.8 },
       visible: {
         opacity: 1,
@@ -209,7 +209,7 @@ export default function OnboardingPage() {
     };
 
     // Framer Motion Variants for the signup form card itself
-    const formCardVariants = {
+    const formCardVariants:Variants = {
       hidden: { opacity: 0, scale: 0.9, y: 50 },
       visible: {
         opacity: 1,
@@ -225,7 +225,7 @@ export default function OnboardingPage() {
     };
 
     // Framer Motion Variants for form elements (staggered entrance)
-    const formItemVariants = {
+    const formItemVariants:Variants = {
       hidden: { opacity: 0, y: 20 },
       visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
     };
@@ -290,7 +290,18 @@ export default function OnboardingPage() {
                         variants={skillsenseTextVariants}
                         initial="hidden"
                         animate="visible"
-                        transition={{ ...skillsenseTextVariants.visible.transition, delay: skillsenseTextVariants.visible.transition.delay + 0.3 }}
+                        transition={{opacity: {
+                          type: "spring",
+                          damping: 15,
+                          stiffness: 80,
+                          delay: 0.8 // Opacity animates with this delay
+                        },
+                        y: {
+                          type: "spring",
+                          damping: 15,
+                          stiffness: 80,
+                          delay: 1.1 // 'y' animates with this delay
+                        } }}
                     >
                         Your future, powered by intelligent insights.
                     </motion.p>
@@ -536,32 +547,7 @@ export default function OnboardingPage() {
                     </motion.form>
                 </motion.div>
 
-                {/* Global CSS for custom shadows and patterns */}
-                <style jsx global>{`
-                    /* Custom Glow Shadows for the form card */
-                    .shadow-glow-form-dark {
-                        box-shadow:
-                            0 0 15px rgba(0,0,0,0.3),
-                            0 0 30px rgba(56, 189, 248, 0.15); /* Sky-400 subtle glow */
-                    }
-                    .shadow-glow-form-light {
-                        box-shadow:
-                            0 0 15px rgba(0,0,0,0.1),
-                            0 0 30px rgba(59, 130, 246, 0.1); /* Blue-500 subtle glow */
-                    }
-
-                    /* Grid Pattern Background for Left Panel */
-                    .bg-grid-pattern-dark {
-                        background-image: linear-gradient(to right, rgba(55, 65, 81, 0.2) 1px, transparent 1px),
-                                          linear-gradient(to bottom, rgba(55, 65, 81, 0.2) 1px, transparent 1px);
-                        background-size: 50px 50px;
-                    }
-                    .bg-grid-pattern-light {
-                        background-image: linear-gradient(to right, rgba(209, 213, 219, 0.3) 1px, transparent 1px),
-                                          linear-gradient(to bottom, rgba(209, 213, 219, 0.3) 1px, transparent 1px);
-                        background-size: 50px 50px;
-                    }
-                `}</style>
+                
             </div>
 
     );

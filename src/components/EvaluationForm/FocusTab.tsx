@@ -254,7 +254,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
           </motion.button>
           {!isResumeOnlyAssessment && (
             <span className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-              (Disable to customize Role & Skills below)
+              Disable to customize Role & Skills below
             </span>
           )}
         </div>
@@ -284,7 +284,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
                                      <FaBriefcase size={16} /> {/* Use the briefcase icon */}
                                  </div>
                                 {/* Role Name */}
-                                <span className="font-medium text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">{selectedRole}</span> {/* Added overflow/ellipsis */}
+                                <span className="font-medium text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis">{selectedRole}</span> 
                                  {/* Remove Button/Icon */}
                                  <motion.button
                                     type="button"
@@ -381,7 +381,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
         {selectedSkills.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 space-y-2">
             <h5 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-              Selected Skills:
+              Selected Skills
             </h5>
             <div className="flex flex-wrap gap-2">
               {selectedSkills.map(skill => (
@@ -466,7 +466,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
         {!isResumeOnlyAssessment && (skillSuggestions.length > 0 || isSkillLoading) && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 space-y-2 ">
             <h5 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-              Suggested Skills:
+              Suggested Skills
             </h5>
             <div className="flex flex-wrap gap-2">
               {skillSuggestions.map((skillName, i) => (
@@ -501,7 +501,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
         {!isResumeOnlyAssessment && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 space-y-2">
             <h5 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-              Add Custom Skill:
+              Add Custom Skill
             </h5>
             <div className="flex items-center gap-2">
               <input
@@ -539,7 +539,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
           disabled={isResumeOnlyAssessment}
         >
           <p className={`mb-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-            E.g., "Focus on advanced React hooks and state management for e-commerce."
+            E.g., &quotFocus on advanced React hooks and state management for e-commerce.&quot
           </p>
           <motion.textarea
             value={userPrompt}

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaMicrophone, FaRegStopCircle, FaRegSave, FaExpand, FaFlag, FaVolumeUp } from 'react-icons/fa'; // Added FaFlag, FaVolumeUp
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'; // Assuming this hook is correctly implemented
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import Markdown from 'react-markdown';
@@ -84,9 +84,9 @@ const TheoryComponent: React.FC<TheoryComponentProps> = ({
     } else {
       if (isSpeechSupported) {
          startListening();
-         toast.info('Speak now...');
+         toast.loading('Speak now...');
       } else {
-         toast.info('Speech recognition not supported in this browser.');
+         toast.error('Speech recognition not supported in this browser.');
       }
     }
   };
@@ -103,7 +103,7 @@ const TheoryComponent: React.FC<TheoryComponentProps> = ({
       // utterance.onend = () => console.log('Speaking ended');
       window.speechSynthesis.speak(utterance);
     } else {
-      toast.info('Text-to-speech not supported in this browser.');
+      toast.error('Text-to-speech not supported in this browser.');
     }
   };
 
@@ -298,7 +298,7 @@ const TheoryComponent: React.FC<TheoryComponentProps> = ({
               ? 'bg-gray-700/30 text-gray-400'
               : 'bg-gray-100 text-gray-600'
           }`}>
-            Listening: "{transcript}"
+            Listening: &quot;{transcript}&quot;
           </div>
         )}
       </div>

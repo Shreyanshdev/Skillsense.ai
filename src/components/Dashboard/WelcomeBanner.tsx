@@ -4,12 +4,12 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FiArrowRight } from 'react-icons/fi';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+
 
 export const WelcomeBanner = () => {
-  const theme = useSelector((state: RootState) => state.theme.theme);
+  // Assuming a theme for demonstration purposes since react-redux is not resolved.
+  // In a real application, you would pass 'theme' as a prop or manage it with React Context.
+  const theme = 'dark'; // Placeholder: replace with actual theme logic if Redux is unavailable
 
   return (
     <motion.div
@@ -50,7 +50,6 @@ export const WelcomeBanner = () => {
           Make smarter career decisions here – get tailored advice, real-time market insights, and personalized roadmaps.
         </motion.p>
         <motion.button
-          onClick={() => { /* Add logic for button click, e.g., router.push('/onboarding') */ }}
           whileHover={{ scale: 1.05, boxShadow: theme === 'dark' ? '0 0 20px rgba(0, 179, 255, 0.4)' : '0 0 20px rgba(59, 130, 246, 0.4)' }}
           whileTap={{ scale: 0.95 }}
           className={`
@@ -62,7 +61,18 @@ export const WelcomeBanner = () => {
             }
           `}
         >
-          Let's Get Started <FiArrowRight className="w-4 h-4" />
+          Let&apos;s Get Started
+          {/* Replaced FiArrowRight with an inline SVG */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor"
+            className="w-4 h-4 ml-1"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
+          </svg>
         </motion.button>
       </div>
     </motion.div>

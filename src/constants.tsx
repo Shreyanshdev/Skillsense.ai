@@ -1,6 +1,7 @@
 // constants.ts
-import { FaCode, FaUserTie, FaLightbulb, FaUserGraduate, FaRocket,FaSignOutAlt, FaClock, FaUserClock, FaHourglassHalf, FaStar, FaRegStar, FaBriefcase, FaBullseye, FaChartBar } from 'react-icons/fa';
-import { FiFileText, FiSettings , FiEdit3 } from 'react-icons/fi';
+import React from 'react';
+import { FaCode, FaUserTie, FaLightbulb, FaUserGraduate, FaBullseye, FaChartBar } from 'react-icons/fa';
+import { FiFileText, FiSettings  } from 'react-icons/fi';
 
 
 export const SKILL_OPTIONS = [

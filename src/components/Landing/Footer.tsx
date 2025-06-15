@@ -7,6 +7,7 @@ import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi'; // Removed FiTwit
 import { ArrowRight, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast'; // Import react-hot-toast for notifications
+import React from 'react';
 
 export default function Footer() {
   const theme = useSelector((state: RootState) => state.theme.theme);

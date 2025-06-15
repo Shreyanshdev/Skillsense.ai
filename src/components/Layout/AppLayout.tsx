@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import GlobalBackground from '@/components/Landing/GlobalBackground';
 import { FiMenu } from 'react-icons/fi';
+import React from 'react';
 
 // Separate Bubbles component - Remains the same
 const Bubbles = ({ theme }: { theme: string }) => {

@@ -2,13 +2,13 @@
 'use client';
 
 import React, { useState, ChangeEvent, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { Loader2, X, Map, Check } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 interface RoadmapGenerateDialogProps {
   isOpen: boolean;
@@ -99,7 +99,7 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
     }
   };
 
-  const dropIn = {
+  const dropIn:Variants = {
     hidden: { y: '-100vh', opacity: 0 },
     visible: { y: '0', opacity: 1, transition: { duration: 0.2, type: 'spring', damping: 25, stiffness: 500 } },
     exit: { y: '100vh', opacity: 0 },

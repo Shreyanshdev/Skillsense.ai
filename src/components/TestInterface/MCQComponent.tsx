@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { FaMicrophone, FaRegCircle, FaRegCheckCircle, FaFlag, FaVolumeUp } from 'react-icons/fa'; // Added FaFlag, FaVolumeUp
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'; // Assuming this hook is correctly implemented
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 interface MCQComponentProps {
   question: {
@@ -48,8 +48,8 @@ const MCQComponent: React.FC<MCQComponentProps> = ({
         toast.success(`Selected: ${matchedOption} via voice`);
         stopListening(); // Stop listening after a successful match
       } else if (transcript.trim() !== '') { // Provide feedback even if no match
-         // Optional: Give feedback if voice input didn't match
-          toast.info(`Voice input "${transcript}" did not match any option.`);
+        // No explicit toast.error here to avoid repeated notifications if no match is found
+        // Consider adding a debounced or less frequent error toast if desired
       }
     }
      // Clear transcript after processing or if listening stops
@@ -73,7 +73,7 @@ const MCQComponent: React.FC<MCQComponentProps> = ({
       // utterance.onend = () => console.log('Speaking ended');
       window.speechSynthesis.speak(utterance);
     } else {
-      toast.info('Text-to-speech not supported in this browser.');
+      toast.error('Text-to-speech not supported in this browser.');
     }
   };
 
@@ -216,7 +216,7 @@ const MCQComponent: React.FC<MCQComponentProps> = ({
               ? 'bg-gray-700/30 text-gray-400'
               : 'bg-gray-100 text-gray-600'
           }`}>
-            Listening: "{transcript}"
+            Listening: &quot;{transcript}&quot;
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useMotionValueEvent, Variants } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { FiMoon, FiSun, FiMenu, FiX } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,13 +8,14 @@ import { RootState } from "@/redux/store";
 import { toggleTheme } from "@/redux/slices/themeSlice";
 import router, { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils"; // Assuming you have a utility for class concatenation
+import React from "react";
 
-const navItemVariants = {
+const navItemVariants: Variants = {
   hidden: { y: -20, opacity: 0 },
   visible: { y: 0, opacity: 1, transition: { type: "spring", damping: 10, stiffness: 150 } },
 };
 
-const dropdownVariants = {
+const dropdownVariants :Variants = {
   hidden: { opacity: 0, y: -20, scaleY: 0.95 },
   visible: {
     opacity: 1,
@@ -43,7 +44,7 @@ const dropdownVariants = {
   },
 };
 
-const dropdownItemVariants = {
+const dropdownItemVariants : Variants= {
   hidden: { opacity: 0, y: -10 },
   visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 200, damping: 20 } },
   exit: { opacity: 0, y: -10, transition: { type: "spring", stiffness: 200, damping: 20 } },

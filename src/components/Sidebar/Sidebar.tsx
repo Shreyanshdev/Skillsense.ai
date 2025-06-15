@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variant, Variants } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { toggleTheme } from '@/redux/slices/themeSlice';
@@ -20,6 +20,8 @@ import {
   FiX             // Mobile close button
 } from 'react-icons/fi';
 import { useState, useEffect, useCallback } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -40,7 +42,7 @@ const sidebarItems = [
   { id: 'billing', name: 'Billing', icon: <FiCreditCard /> },
 ];
 
-const skillsenseTextVariants = {
+const skillsenseTextVariants : Variants = {
   hidden: { opacity: 0, x: 30, scale: 0.8 },
   visible: {
     opacity: 1,
@@ -365,6 +367,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       </motion.div>
     </>
   );
+};
+
+// Add PropTypes for validation
+Sidebar.propTypes = {
+  isMobileOpen: PropTypes.bool.isRequired,
+  toggleMobileSidebar: PropTypes.func.isRequired,
+  onSidebarWidthChange: PropTypes.func.isRequired,
+  isPinned: PropTypes.bool.isRequired,
+  setIsPinned: PropTypes.func.isRequired,
+  isDesktop: PropTypes.bool.isRequired,
+  userEmail: PropTypes.string.isRequired,
+  userName: PropTypes.string.isRequired,
+  loadingUser: PropTypes.bool.isRequired,
 };
 
 export default Sidebar;

@@ -152,7 +152,7 @@ const TestimonialSection: React.FC<TestimonialSectionProps> = ({ isDark }) => {
           {/* Animate based on currentIndex change */}
           <div
             key={currentIndex} // Key changes to re-trigger transition on testimonial change
-            className="absolute w-full transition-all duration-700 ease-in-out transform opacity-0 scale-95" // Default exit state
+            className="absolute w-full transition-all duration-700 ease-in-out transform opacity-0 scale-95" 
             style={{
               // Inline styles for basic transition. On mount, scale and opacity will animate.
               // When key changes, old element fades/scales out, new one fades/scales in.
@@ -196,7 +196,7 @@ const TestimonialSection: React.FC<TestimonialSectionProps> = ({ isDark }) => {
 
                 {/* Testimonial Content */}
                 <blockquote className={`text-xl sm:text-2xl leading-relaxed text-center mb-8 font-light ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                  "{currentTestimonial?.content}"
+                  &quot;{currentTestimonial?.content}&quot;
                 </blockquote>
 
                 {/* User Info */}
@@ -231,7 +231,7 @@ const TestimonialSection: React.FC<TestimonialSectionProps> = ({ isDark }) => {
           </div>
         </div>
 
-        {/* Navigation Controls */}
+
         <div className="flex items-center justify-center gap-8 mb-12">
           <button
             onClick={prevTestimonial}
@@ -253,7 +253,7 @@ const TestimonialSection: React.FC<TestimonialSectionProps> = ({ isDark }) => {
                     : isDark ? 'bg-gray-600 hover:bg-gray-500 hover:scale-110' : 'bg-blue-200 hover:bg-blue-300 hover:scale-110'
                 }`}
               >
-                {/* Ping animation for active dot */}
+
                 {index === currentIndex && (
                   <div className={`absolute inset-0 rounded-full animate-ping ${isDark ? 'bg-sky-400' : 'bg-blue-500'}`} />
                 )}
@@ -270,7 +270,7 @@ const TestimonialSection: React.FC<TestimonialSectionProps> = ({ isDark }) => {
           </button>
         </div>
 
-        {/* Testimonial Grid for Mobile (kept simple without complex animations) */}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:hidden">
           {testimonials.slice(0, 3).map((testimonial, index) => (
             <div key={testimonial.id} className={`backdrop-blur-sm rounded-2xl p-6 border transition-all duration-300 group
@@ -289,7 +289,7 @@ const TestimonialSection: React.FC<TestimonialSectionProps> = ({ isDark }) => {
                 </div>
               </div>
               <p className={`text-sm leading-relaxed mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                "{testimonial.content.substring(0, 120)}..."
+                &quot;{testimonial.content.substring(0, 120)}...&quot;
               </p>
               <div className="flex items-center justify-between">
                 <div className="flex">
@@ -303,7 +303,7 @@ const TestimonialSection: React.FC<TestimonialSectionProps> = ({ isDark }) => {
           ))}
         </div>
 
-        {/* Stats Section */}
+
         <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 mt-16">
           {[
             { number: '50K+', label: 'Success Stories', icon: '🎯' },

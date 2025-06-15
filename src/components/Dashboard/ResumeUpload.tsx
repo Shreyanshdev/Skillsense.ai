@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { FileUp, X, Loader2, Check, ArrowRight, UploadCloud } from 'lucide-react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -120,7 +120,7 @@ export const ResumeUploadDialog: React.FC<ResumeUploadDialogProps> = ({ isOpen, 
     onClose();
   };
 
-  const dropIn = {
+  const dropIn:Variants = {
     hidden: { y: '-100vh', opacity: 0 },
     visible: { y: '0', opacity: 1, transition: { duration: 0.2, type: 'spring', damping: 20, stiffness: 400 } }, // Slightly faster spring
     exit: { y: '100vh', opacity: 0 },

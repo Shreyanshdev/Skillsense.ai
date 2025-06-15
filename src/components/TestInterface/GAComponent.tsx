@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import { FaMicrophone, FaRegCircle, FaRegCheckCircle, FaFlag, FaVolumeUp } from 'react-icons/fa';
 
 interface GAComponentProps {
@@ -42,7 +42,7 @@ const GAComponent: React.FC<GAComponentProps> = ({
         toast.success(`Selected: ${matchedOption} via voice`);
         stopListening();
       } else if (transcript.trim() !== '') {
-        toast.info(`Voice input "${transcript}" did not match any option.`);
+        toast.error(`Voice input "${transcript}" did not match any option.`);
       }
     }
   }, [transcript, isListening, question, onAnswerChange, stopListening]);
@@ -54,7 +54,7 @@ const GAComponent: React.FC<GAComponentProps> = ({
       utterance.lang = 'en-US';
       window.speechSynthesis.speak(utterance);
     } else {
-      toast.info('Text-to-speech not supported in this browser.');
+      toast.error('Text-to-speech not supported in this browser.');
     }
   };
 
@@ -197,7 +197,7 @@ const GAComponent: React.FC<GAComponentProps> = ({
               ? 'bg-gray-700/30 text-gray-400'
               : 'bg-gray-100 text-gray-600'
           }`}>
-            Listening: "{transcript}"
+            Listening: &quot;{transcript}&quot;
           </div>
         )}
       </div>
