@@ -146,9 +146,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <p className={`text-sm mb-2 line-clamp-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                <div className={`text-sm mb-2 line-clamp-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                                     <Markdown>{q.questionText}</Markdown>
-                                                </p>
+                                                </div>
                                                 <div className={`text-xs p-2 rounded ${
                                                     theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
                                                 } whitespace-pre-wrap overflow-auto max-h-20`}> {/* Added max-h-20 */}

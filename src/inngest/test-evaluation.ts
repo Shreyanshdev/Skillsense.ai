@@ -43,7 +43,7 @@ export const evaluateTestFunction = inngest.createFunction(
     const functionStartTime = Date.now();
     console.log(`[${new Date().toISOString()}] Inngest Function 'evaluate-test-submission' started for event ID: ${event.id}`);
 
-    const { testId, userId, userEmail, questionsForEvaluation } = event.data;
+    const { testId, userId, userEmail, questionsForEvaluation ,reviewSessionId } = event.data;
 
     const questionResults: QuestionResult[] = [];
     let totalScore = 0;
@@ -312,8 +312,6 @@ export const evaluateTestFunction = inngest.createFunction(
       llmInsights.overallApproachAnalysis = "Could not be determined.";
     }
 
-    // --- Phase 3: Store Results in Database ---
-    const reviewSessionId = uuidv4();
     const finalEvaluationReport: EvaluationReport = {
       testId,
       userId,

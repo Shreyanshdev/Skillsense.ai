@@ -6,6 +6,9 @@ import bcrypt from "bcrypt";
 import { mailSender } from "@/utils/nodemailer";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { db } from '@/lib/db';
+import { usersTable as pgUsersTable } from '@/lib/schema'; // Your Drizzle schema for usersTable
+import { eq } from 'drizzle-orm'; // For Drizzle queries (e.g., eq for equality)
 
 dotenv.config();
 connectDB();
@@ -77,7 +80,25 @@ export async function POST(request: NextRequest) {
        maxAge: 7 * 24 * 60 * 60,
        sameSite: "strict",
      });
- 
+
+     try {
+      const pgUser = await db.select().from(pgUsersTable).where(eq(pgUsersTable.email, newUser.email)).limit(1);
+
+      if (pgUser.length === 0) {
+        // User does not exist in PostgreSQL usersTable, insert them
+        await db.insert(pgUsersTable).values({
+          name: newUser.username || newUser.email.split('@')[0], // Use username from Mongo or derive from email
+          email: newUser.email,
+        });
+        console.log(`User ${newUser.email} synchronized to PostgreSQL usersTable.`);
+      } else {
+        console.log(`User ${newUser.email} already exists in PostgreSQL usersTable.`);
+        // Optional: Update user details in pgUsersTable if they can change in MongoDB
+        await db.update(pgUsersTable).set({ name: newUser.username }).where(eq(pgUsersTable.email, newUser.email));
+      }
+    } catch (pgSyncError) {
+      console.error('PostgreSQL user synchronization error:', pgSyncError);
+    }
      return response;
   } catch (error) {
     console.error("Signup error:", error);

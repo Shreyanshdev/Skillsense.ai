@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       } else {
         console.log(`User ${user.email} already exists in PostgreSQL usersTable.`);
         // Optional: Update user details in pgUsersTable if they can change in MongoDB
-        // await db.update(pgUsersTable).set({ name: user.username }).where(eq(pgUsersTable.email, user.email));
+        await db.update(pgUsersTable).set({ name: user.username }).where(eq(pgUsersTable.email, user.email));
       }
     } catch (pgSyncError) {
       console.error('PostgreSQL user synchronization error:', pgSyncError);

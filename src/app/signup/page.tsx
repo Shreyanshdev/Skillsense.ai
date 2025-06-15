@@ -204,9 +204,7 @@ export default function OnboardingPage() {
       }
     };
     
-
     // --- Framer Motion Variants ---
-
     // Framer Motion Variants for the "SkillSense.AI" text in the left panel
     const skillsenseTextVariants :Variants = {
       hidden: { opacity: 0, y: 50, scale: 0.8 },

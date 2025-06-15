@@ -386,8 +386,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
             <div className="flex flex-wrap gap-2">
               {selectedSkills.map(skill => (
                 <motion.div key={skill.id} className="flex flex-col items-start w-full sm:w-auto">
-                  <motion.button
-                    
+                  <motion.div
                     onClick={() =>
                       editingProficiency === skill.id ? setEditingProficiency(null) : setEditingProficiency(skill.id)
                     }
@@ -408,7 +407,7 @@ const FocusTab: React.FC<FocusTabProps> = ({
                     >
                         <FaRegTimesCircle className="text-red-500 text-lg" />
                     </motion.button>
-                  </motion.button>
+                  </motion.div>
 
                   {/* Display Proficiency or Prompt */}
                   {skill.level && editingProficiency !== skill.id && !isResumeOnlyAssessment && (

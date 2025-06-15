@@ -9,29 +9,9 @@ import { FiArrowRight, FiMail, FiLock, FiSun, FiMoon } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast'; // Import toast for user feedback
 
 // Assume GlobalBackground component exists at this path
 import GlobalBackground from '@/components/Landing/GlobalBackground';
-
-// --- Type Definitions ---
-// Define the expected structure of a successful login response
-interface LoginSuccessResponse {
-  success: boolean;
-  token: string;
-  message?: string; // Optional message on success
-}
-
-// Define the expected structure of a login error response
-interface LoginErrorResponse {
-  success: boolean;
-  message?: string; // Error message from the API
-}
-
-// Define the overall shape of the response from the login API
-type LoginApiResponse = LoginSuccessResponse | LoginErrorResponse;
-// --- End Type Definitions ---
-
 
 export default function LoginPage() {
   const theme = useSelector((state: RootState) => state.theme.theme);
@@ -42,10 +22,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null); // State for displaying form-level error
+  const [error, setError] = useState<string | null>(null);
 
-  // Framer Motion Variants (no changes needed here, keeping for completeness)
-  const skillsenseTextVariants: Variants = {
+  // Framer Motion Variants for the "SkillSense.AI" text in the left panel
+  const skillsenseTextVariants:Variants = {
     hidden: { opacity: 0, y: 50, scale: 0.8 },
     visible: {
       opacity: 1,
@@ -58,16 +38,17 @@ export default function LoginPage() {
         delay: 0.8,
       },
     },
-    hover: {
+    hover: { // Tilt and Shine on hover
       rotateY: 5,
       rotateX: -5,
-      filter: ["brightness(1)", "brightness(1.5)", "brightness(1.0)"],
+      filter: ["brightness(1)", "brightness(1.5)", "brightness(1.0)"], // Shine effect
       transition: { duration: 0.5, ease: "easeInOut", filter: { repeat: Infinity, duration: 3, ease: "linear" } },
-      perspective: 1000,
+      perspective: 1000, // For 3D effect
     },
   };
 
-  const formCardVariants: Variants = {
+  // Framer Motion Variants for the login form card itself
+  const formCardVariants:Variants = {
     hidden: { opacity: 0, scale: 0.9, y: 50 },
     visible: {
       opacity: 1,
@@ -77,17 +58,19 @@ export default function LoginPage() {
         type: "spring",
         damping: 18,
         stiffness: 100,
-        delay: 0.4,
+        delay: 0.4, // Staggered entrance after initial load
       },
     },
   };
 
-  const formItemVariants: Variants = {
+  // Framer Motion Variants for form elements (staggered entrance)
+  const formItemVariants : Variants= {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
   };
 
-  const inputVariants: Variants = {
+  // Framer Motion Variants for input fields (hover and focus effect)
+  const inputVariants:Variants = {
     rest: {
       borderColor: isDark ? '#4B5563' : '#D1D5DB',
       boxShadow: '0 0 0 0 rgba(0,0,0,0)',
@@ -109,12 +92,10 @@ export default function LoginPage() {
     e.preventDefault();
 
     setLoading(true);
-    setError(null); // Clear previous errors
+    setError(null);
 
     if (!email || !password) {
-      const msg = 'Please enter both email and password.';
-      setError(msg);
-      toast.error(msg); // Show toast for immediate feedback
+      setError('Please enter both email and password.');
       setLoading(false);
       return;
     }
@@ -126,76 +107,47 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      // Assert the type of data returned from the API
-      const data: LoginApiResponse = await res.json();
+      const data = await res.json();
 
       if (res.ok && data.success) {
-        // Type guard to ensure data is LoginSuccessResponse
-        if ('token' in data) {
-          console.log('Login successful:', data);
-          localStorage.setItem('token', data.token);
-          toast.success(data.message || 'Login successful!'); // User-friendly success toast
-          router.replace('/dashboard');
-        } else {
-            // This case should ideally not be reached if the backend correctly sends 'token' on success
-            const msg = 'Login succeeded but response missing token. Please contact support.';
-            console.error(msg, data);
-            setError(msg);
-            toast.error(msg);
-        }
+        console.log('Login successful:', data);
+        localStorage.setItem('token', data.token);
+        router.replace('/dashboard');
       } else {
-        // Type guard to ensure data is LoginErrorResponse
-        if ('message' in data) {
-            console.error('Login failed:', data.message);
-            const errorMessage = data.message || 'Login failed. Please try again.';
-            setError(errorMessage);
-            toast.error(errorMessage); // Show toast for login failures
-        } else {
-            const msg = 'Login failed with unknown error. Please try again.';
-            console.error('Login failed with unexpected response:', data);
-            setError(msg);
-            toast.error(msg);
-        }
+        console.error('Login failed:', data.message);
+        setError(data.message || 'Login failed. Please try again.');
       }
-    } catch (err) {
-      console.error('Login API error:', err);
-      // More descriptive error messages for network issues vs. API errors
-      let errorMessage = 'An unexpected error occurred during login. Please try again later.';
-
-      // For network connection issues (e.g., server offline), fetch will throw a TypeError.
-      if (err instanceof TypeError && err.message === 'Failed to fetch') {
-        errorMessage = 'Network error: Could not connect to the server. Please check your internet connection.';
-      } else if (err instanceof Error) {
-          errorMessage = err.message || errorMessage;
-      }
-
-      setError(errorMessage);
-      toast.error(errorMessage); // Show toast for all catch-all errors
+    } catch (error) {
+      console.error('Login API error:', error);
+      setError('An error occurred during login. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
-      <GlobalBackground isDark={isDark} />
+    
+      <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
+        <GlobalBackground  isDark={isDark}></GlobalBackground>
+        {/* Back to Home Button */}
+        
 
-      {/* Theme Toggle Button */}
-      <motion.button
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => dispatch(toggleTheme())}
-        className={`absolute top-8 right-8 p-3 rounded-full shadow-md cursor-pointer
-          ${isDark ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700' : 'bg-white text-blue-600 hover:bg-gray-100'}
-          transition-colors duration-300 transform hover:scale-105`}
-      >
-        {isDark ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
-      </motion.button>
-
-      <div className='grid lg:grid-cols-2'>
+        {/* Theme Toggle Button */}
+        <motion.button
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => dispatch(toggleTheme())}
+          className={`absolute top-8 right-8 p-3 rounded-full shadow-md cursor-pointer
+            ${isDark ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700' : 'bg-white text-blue-600 hover:bg-gray-100'}
+            transition-colors duration-300 transform hover:scale-105`}
+        >
+          {isDark ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
+        </motion.button>
+        
+        <div className='grid lg:grid-cols-2'>
         {/* SkillSense.AI background element */}
         <div
           className={`absolute left-0 top-0 bottom-0 w-1/2 hidden lg:flex flex-col items-center justify-center overflow-hidden z-10`}
@@ -216,20 +168,18 @@ export default function LoginPage() {
             variants={skillsenseTextVariants}
             initial="hidden"
             animate="visible"
-            transition={{
-              opacity: {
-                type: "spring",
-                damping: 15,
-                stiffness: 80,
-                delay: 0.8
-              },
-              y: {
-                type: "spring",
-                damping: 15,
-                stiffness: 80,
-                delay: 1.1
-              }
-            }}
+            transition={{opacity: {
+              type: "spring",
+              damping: 15,
+              stiffness: 80,
+              delay: 0.8 // Opacity animates with this delay
+            },
+            y: {
+              type: "spring",
+              damping: 15,
+              stiffness: 80,
+              delay: 1.1 // 'y' animates with this delay
+            } }}
           >
             Your future, powered by intelligent insights.
           </motion.p>
@@ -247,22 +197,25 @@ export default function LoginPage() {
           animate="visible"
           variants={formCardVariants}
           whileHover="hover"
-          whileTap={{ scale: 0.99 }}
+          // Variants for the form's border and shadow glow on hover
+          whileInView="hover" // Or use whileHover for user interaction. 'whileInView' means it applies when it scrolls into view
+          viewport={{ once: false, amount: 0.2 }} // Only applies if whileInView is used, for continuous glow
+          whileTap={{ scale: 0.99 }} // Subtle tap effect for the whole card
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          style={{ transformOrigin: 'center' }}
+          style={{ transformOrigin: 'center' }} // Ensures scale is centered
         >
           <motion.button
             initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => router.push('/')}
-            className={`top-8 mb-3 -mt-2 left-8 px-3 text-center py-2 rounded-full flex items-center gap-2 text-sm font-medium shadow-md cursor-pointer
-                ${isDark ? ' text-gray-300 hover:bg-gray-700 hover:text-white' : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900'}
-                transition-colors duration-300 transform hover:scale-105`}
-          >
-            ← Back to home
+             animate={{ opacity: 1, x: 0 }}
+             transition={{ duration: 0.5, delay: 0.4 }}
+             whileHover={{ scale: 1.05 }}
+             whileTap={{ scale: 0.95 }}
+             onClick={() => router.push('/')}
+             className={`top-8 mb-3 -mt-2 left-8 px-3 text-centre py-2 rounded-full flex items-center gap-2 text-sm font-medium shadow-md cursor-pointer
+                 ${isDark ? ' text-gray-300 hover:bg-gray-700 hover:text-white' : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900'}
+                 transition-colors duration-300 transform hover:scale-105`}
+            >
+                    ← Back to home
           </motion.button>
           <div className="text-center">
             <motion.h1
@@ -433,7 +386,10 @@ export default function LoginPage() {
             </p>
           </motion.form>
         </motion.div>
+
+        </div>
+
+     
       </div>
-    </div>
   );
 }

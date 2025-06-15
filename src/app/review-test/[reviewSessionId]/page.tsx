@@ -1,7 +1,7 @@
 // src/app/review-test/[reviewSessionId]/page.tsx
 'use client';
 
-import React, { useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef, useCallback} from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { EvaluationReport, QuestionResult } from '@/types/evaluation';
 import DOMPurify from 'dompurify';
@@ -19,6 +19,9 @@ marked.setOptions({
   breaks: true,
 });
 
+const POLLING_INTERVAL_MS = 3000; // Poll every 3 seconds
+const MAX_POLLING_ATTEMPTS = 20;
+
 function ReviewTestPage () {
   const params = useParams();
   const router = useRouter();
@@ -28,6 +31,8 @@ function ReviewTestPage () {
   const [error, setError] = useState<string | null>(null);
   const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Controls mobile sidebar visibility only
+  const [pollingAttempt, setPollingAttempt] = useState(0); // Track polling attempts
+  const [isEvaluating, setIsEvaluating] = useState(true); // New state to indicate ongoing evaluation
 
   const dispatch = useDispatch<AppDispatch>();
   const currentTheme = useSelector((state: RootState) => state.theme.theme);
@@ -55,34 +60,77 @@ function ReviewTestPage () {
   const observer = useRef<IntersectionObserver | null>(null);
 
   // --- Data Fetching ---
-  useEffect(() => {
+  const fetchEvaluationReport = useCallback(async () => {
     if (!reviewSessionId) {
       setError("Review session ID not found. Please provide a valid ID.");
       setLoading(false);
+      setIsEvaluating(false);
       return;
     }
 
-    const fetchEvaluationReport = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/evaluation-report/${reviewSessionId}`);
-        if (!response.ok) {
+    if (pollingAttempt >= MAX_POLLING_ATTEMPTS) {
+      console.warn(`Max polling attempts (${MAX_POLLING_ATTEMPTS}) reached for ${reviewSessionId}. Stopping polling.`);
+      setError("Evaluation report not found after several attempts. Please try again later or check your dashboard.");
+      setLoading(false);
+      setIsEvaluating(false); // Stop showing loading/evaluating spinner
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/evaluation-report/${reviewSessionId}`);
+      if (!response.ok) {
+        // If not found (404), or other client errors, continue polling
+        if (response.status === 404) {
+          console.log(`Evaluation report not yet available for ${reviewSessionId}. Attempt ${pollingAttempt + 1}.`);
+          setPollingAttempt(prev => prev + 1); // Increment attempt count
+          // No error state set here, as it's an expected temporary state
+          setLoading(false); // Can set loading to false to indicate report not yet loaded, but evaluation is ongoing
+          setIsEvaluating(true); // Keep evaluation status true
+          return; // Do not set report, let the loop continue
+        } else {
+          // For other errors (e.g., 500 Internal Server Error), stop polling and show error
           const errorData = await response.json();
           throw new Error(errorData.error || `Failed to fetch evaluation report (Status: ${response.status}).`);
         }
-        const data: EvaluationReport = await response.json();
-        setEvaluationReport(data);
-      } catch (err) {
-        console.error('Error fetching evaluation report:', err);
-        setError((err as Error).message || 'An unexpected error occurred while fetching the report.');
-      } finally {
-        setLoading(false);
       }
-    };
 
-    fetchEvaluationReport();
-  }, [reviewSessionId]);
+      // If response is OK (200), report is found!
+      const data: EvaluationReport = await response.json();
+      setEvaluationReport(data);
+      setLoading(false);
+      setError(null); // Clear any previous errors
+      setIsEvaluating(false); // Evaluation complete
+      console.log(`Evaluation report found for ${reviewSessionId} after ${pollingAttempt + 1} attempts.`);
+
+    } catch (err) {
+      console.error('Error fetching evaluation report:', err);
+      setError((err as Error).message || 'An unexpected error occurred while fetching the report.');
+      setLoading(false);
+      setIsEvaluating(false); // Stop showing loading/evaluating spinner for fatal error
+    }
+  }, [reviewSessionId, pollingAttempt]); // Add pollingAttempt to dependencies
+
+  useEffect(() => {
+    let pollingTimer: NodeJS.Timeout;
+
+    if (!evaluationReport && !error && reviewSessionId && isEvaluating) {
+      pollingTimer = setTimeout(() => {
+        fetchEvaluationReport();
+      }, POLLING_INTERVAL_MS);
+    }
+
+    // Initial fetch on component mount
+    if (pollingAttempt === 0 && !evaluationReport && !error && reviewSessionId) {
+      fetchEvaluationReport();
+    }
+
+    return () => {
+      clearTimeout(pollingTimer);
+    };
+  }, [reviewSessionId, evaluationReport, error, fetchEvaluationReport, pollingAttempt, isEvaluating]);
 
   // --- Intersection Observer for Active Question (unchanged) ---
   useEffect(() => {

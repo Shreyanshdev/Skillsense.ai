@@ -3,6 +3,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { inngest } from '@/inngest/client'; // Assuming your inngest client is here
 import { getMongoUserEmailFromRequest } from '@/utils/auth'; // Assuming this utility exists for user email
+import { v4 as uuidv4 } from 'uuid';
+
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -19,6 +21,8 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[${new Date().toISOString()}] Test submission received for Test ID: ${testId}, User ID: ${userId}. Triggering Inngest event.`);
+    const reviewSessionId = uuidv4();
+    console.log(`[${new Date().toISOString()}] Generated reviewSessionId: ${reviewSessionId}`);
 
     // --- Trigger the Inngest function ---
     const sent = await inngest.send({
@@ -28,6 +32,7 @@ export async function POST(request: NextRequest) {
         userId,
         userEmail, // Pass user email to the Inngest function
         questionsForEvaluation,
+        reviewSessionId
       },
     });
 
@@ -46,7 +51,8 @@ export async function POST(request: NextRequest) {
       message: 'Test evaluation queued successfully! You will receive a detailed report soon.',
       evaluationRunId: runId, // Return the Inngest runId for tracking
       testId, // Return testId for client-side reference
-      userId, // Return userId for client-side reference
+      userId,
+      reviewSessionId, // Return userId for client-side reference
     }, { status: 202 }); // 202 Accepted status indicates processing will occur later
 
   } catch (error) {
