@@ -162,8 +162,7 @@ export default function LoginPage() {
       // More descriptive error messages for network issues vs. API errors
       let errorMessage = 'An unexpected error occurred during login. Please try again later.';
 
-      // Basic check for common network errors (though fetch doesn't throw for 4xx/5xx)
-      // For network connection issues (e.g., server offline), fetch will throw an error.
+      // For network connection issues (e.g., server offline), fetch will throw a TypeError.
       if (err instanceof TypeError && err.message === 'Failed to fetch') {
         errorMessage = 'Network error: Could not connect to the server. Please check your internet connection.';
       } else if (err instanceof Error) {
@@ -248,8 +247,6 @@ export default function LoginPage() {
           animate="visible"
           variants={formCardVariants}
           whileHover="hover"
-          whileInView="hover"
-          viewport={{ once: false, amount: 0.2 }}
           whileTap={{ scale: 0.99 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           style={{ transformOrigin: 'center' }}
