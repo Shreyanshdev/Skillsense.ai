@@ -1,5 +1,4 @@
 // src/components/FixedBottomIcons/FixedBottomIcons.tsx
-// Renders fixed icons at the bottom-left, visible when sidebar is collapsed on desktop
 
 'use client'; // Needs client-side features
 

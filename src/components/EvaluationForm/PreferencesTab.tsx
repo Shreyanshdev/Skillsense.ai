@@ -1,11 +1,8 @@
-// src/components/EvaluationForm/PreferencesTab.tsx
-// Handles the content and logic for the 'Preferences' tab of the evaluation form
-// Now includes dynamic guidelines based on test configuration.
+
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaClock, FaTrashAlt, FaSpinner, FaTimesCircle, FaInfoCircle, FaCheckCircle, FaQuestionCircle } from 'react-icons/fa'; // Added FaQuestionCircle
-import { FiCheckSquare } from 'react-icons/fi';
+import { FaClock, FaTrashAlt, FaSpinner, FaTimesCircle, FaInfoCircle} from 'react-icons/fa'; // Added FaQuestionCircle
 import SectionWrapper from '@/components/common/SectionWrapper';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';

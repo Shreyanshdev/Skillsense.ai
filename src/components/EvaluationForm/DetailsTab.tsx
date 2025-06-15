@@ -1,7 +1,7 @@
 // src/components/EvaluationForm/DetailsTab.tsx
 // Handles resume upload, coding difficulty selection, and test type/round counts.
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaUpload, FaFilePdf, FaFileWord, FaInfoCircle, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaSpinner, FaQuestionCircle } from 'react-icons/fa';
 import SectionWrapper from '@/components/common/SectionWrapper';

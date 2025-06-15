@@ -1,7 +1,7 @@
 'use client'; // Crucial for Next.js Client Components
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion'; // Import Framer Motion
+import { motion, AnimatePresence, Variants } from 'framer-motion'; // Import Framer Motion
 import { Check, X, Zap, Crown, Rocket, Star, ArrowRight, Sparkles } from 'lucide-react';
 
 interface PricingPlan {
@@ -126,7 +126,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isDark }) => {
     }
   };
 
-  const itemVariants = {
+  const itemVariants:Variants = {
     hidden: { opacity: 0, y: 50 },
     visible: {
       opacity: 1,
@@ -139,7 +139,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isDark }) => {
     }
   };
 
-  const buttonVariants = {
+  const buttonVariants:Variants = {
     rest: { scale: 1 },
     hover: { scale: 1.05 },
     tap: { scale: 0.95 }

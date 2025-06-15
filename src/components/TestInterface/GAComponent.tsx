@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { toast } from 'react-hot-toast';
 import { FaMicrophone, FaRegCircle, FaRegCheckCircle, FaFlag, FaVolumeUp } from 'react-icons/fa';
@@ -58,13 +58,13 @@ const GAComponent: React.FC<GAComponentProps> = ({
     }
   };
 
-  const containerVariants = {
+  const containerVariants:Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 }
   };
 
-  const optionVariants = {
+  const optionVariants:Variants = {
     rest: { scale: 1, y: 0, borderColor: theme === 'dark' ? '#4a5568' : '#e2e8f0' },
     hover: { scale: 1.02, y: -2, borderColor: theme === 'dark' ? '#6366f1' : '#3b82f6' },
     selected: {

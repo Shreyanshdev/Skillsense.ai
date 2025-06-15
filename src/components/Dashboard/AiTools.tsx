@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { AiToolCard } from './AiToolCard';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
@@ -40,7 +40,7 @@ const aiToolsList = [
 ];
 
 // Animation variants for staggered grid items
-const containerVariants = {
+const containerVariants:Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -51,7 +51,7 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants:Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,

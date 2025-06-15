@@ -169,7 +169,7 @@ const FeatureSection: React.FC<FeatureSectionProps> = ({ isDark , onGetStarted }
     },
   };
 
-  const imageHoverVariants = {
+  const imageHoverVariants: Variants = {
     hover: { scale: 1.05, boxShadow: isDark ? "0 0 40px rgba(56, 189, 248, 0.4)" : "0 0 40px rgba(0, 123, 255, 0.3)" },
     initial: { scale: 1, boxShadow: "none" },
   };

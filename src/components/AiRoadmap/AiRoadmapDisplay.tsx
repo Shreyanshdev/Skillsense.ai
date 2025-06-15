@@ -20,7 +20,7 @@ const nodeTypes = {
   turbo: TurboNode,
 };
 
-export const AiRoadmapDisplay: React.FC = () => {
+export default function AiRoadmapDisplay() {
   const { roadmapId } = useParams<{ roadmapId: string }>(); // Get ID from URL
   const theme = useSelector((state: RootState) => state.theme.theme);
   const isDark = theme === 'dark';

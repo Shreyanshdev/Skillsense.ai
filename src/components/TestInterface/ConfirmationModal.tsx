@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { FaQuestionCircle, FaCheckCircle, FaTimesCircle, FaFlag, FaCircle } from 'react-icons/fa'; // Added more icons
 import Markdown from 'react-markdown'; // For rendering question text
 import { Question, Round, TestData, QuestionType } from '@/types/index'; 
@@ -46,7 +46,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     };
 
     // Animation variants for the modal itself
-    const modalVariants = {
+    const modalVariants:Variants = {
         hidden: { opacity: 0, y: -50, scale: 0.9 },
         visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 300, damping: 25 } },
         exit: { opacity: 0, y: 50, scale: 0.9 },

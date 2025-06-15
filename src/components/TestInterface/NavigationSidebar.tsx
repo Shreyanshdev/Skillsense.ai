@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaClock, FaPlus, FaChevronDown, FaCircle, FaCheckCircle, FaQuestionCircle, FaFlag, FaTimesCircle, FaAngleRight, FaAngleDown } from 'react-icons/fa'; // Added FaTimesCircle, FaAngleRight, FaAngleDown
 import React, { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 // Define the Question interface based on your test data structure
 interface Question {
@@ -74,7 +74,7 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
     };
 
     const handleGenerateOptionClick = (type: 'mcq' | 'theory' | 'coding' | 'mixed') => {
-        toast.info(`Simulating generating a new ${type} question...`);
+        toast.success(`Simulating generating a new ${type} question...`);
         setIsGenerateDropdownOpen(false);
         // In a real app, you would call a backend API here to generate the question
         // and then update the testState with the new question.

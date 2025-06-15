@@ -1,6 +1,6 @@
 // src/app/career-roadmap-generator/[roadmapId]/page.tsx
 "use client";
-import { AiRoadmapDisplay } from '@/components/AiRoadmap/AiRoadmapDisplay'; // Adjust path
+import  AiRoadmapDisplay  from '@/components/AiRoadmap/AiRoadmapDisplay'; // Adjust path
 import AppLayout from '@/components/Layout/AppLayout';
 import React from 'react';
 

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["monaco-editor"],
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,

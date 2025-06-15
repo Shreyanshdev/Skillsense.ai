@@ -9,9 +9,7 @@ import {
   FaFlag, FaCheckCircle, FaTimesCircle, FaInfoCircle, FaVolumeUp,
   FaTools // For compile icon
 } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import type { editor } from 'monaco-editor';
 import Markdown from 'react-markdown';
 
@@ -260,11 +258,11 @@ const CodingComponent: React.FC<CodingComponentProps> = ({
                     setActiveTab('test-cases'); // Stay on test cases if all passed to show green checks
                 } else if (updatedUITestResults.length > 0 && !allPassed) {
                     const failedCount = updatedUITestResults.filter(r => !r.passed).length;
-                    toast.warning(`${failedCount} test case(s) failed. Check Test Cases tab.`);
+                    toast.custom(`${failedCount} test case(s) failed. Check Test Cases tab.`);
                     setActiveTab('test-cases'); // Switch to test cases to highlight failures
                 } else {
                     // No test cases or no specific pass/fail determined
-                    toast.info('Code executed. Check output tab for console messages.');
+                    toast.success('Code executed. Check output tab for console messages.');
                     setActiveTab('output');
                 }
             }
@@ -284,7 +282,7 @@ const CodingComponent: React.FC<CodingComponentProps> = ({
       utterance.lang = 'en-US'; // Set language
       window.speechSynthesis.speak(utterance);
     } else {
-      toast.info('Text-to-speech not supported in this browser.');
+      toast.error('Text-to-speech not supported in this browser.');
     }
   };
 
@@ -381,7 +379,7 @@ const CodingComponent: React.FC<CodingComponentProps> = ({
                 className={`p-2 rounded-lg transition-colors ${
                   theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
                 }`}
-                onClick={() => toast.info('Save functionality not implemented (code auto-saves to user answer).')}
+                onClick={() => toast.error('Save functionality not implemented (code auto-saves to user answer).')}
                 aria-label="Save code"
              >
                <FaRegSave className="text-lg" />

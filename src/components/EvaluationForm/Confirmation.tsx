@@ -4,7 +4,7 @@
 'use client';
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { FaTimes } from 'react-icons/fa';
 
 interface ConfirmationProps {
@@ -30,13 +30,13 @@ const Confirmation: React.FC<ConfirmationProps> = ({
 }) => {
   const isDarkMode = theme === 'dark';
 
-  const modalVariants = {
+  const modalVariants:Variants = {
     hidden: { opacity: 0, scale: 0.8, y: -50 },
     visible: { opacity: 1, scale: 1, y: 0 },
     exit: { opacity: 0, scale: 0.8, y: 50 },
   };
 
-  const backdropVariants = {
+  const backdropVariants : Variants= {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
     exit: { opacity: 0 },

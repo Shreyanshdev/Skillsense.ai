@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { MessageSquare, Send, Bot, User, X } from 'lucide-react'; // Using Lucide for modern icons
@@ -63,13 +63,13 @@ export const ResumeChatbot = () => {
     }, 1000);
   };
 
-  const chatVariants = {
+  const chatVariants : Variants = {
     hidden: { opacity: 0, scale: 0.9, y: 50 },
     visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
     exit: { opacity: 0, scale: 0.9, y: 50, transition: { duration: 0.2, ease: 'easeIn' } },
   };
 
-  const messageVariants = {
+  const messageVariants :Variants = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 120, damping: 10 } },
   };
