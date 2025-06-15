@@ -1,7 +1,6 @@
 // src/inngest/functions/test-evaluation.ts
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { v4 as uuidv4 } from 'uuid';
 import { inngest } from '@/inngest/client';
 import { TestEvaluatorAgent } from '@/inngest/functions'; // Import the new agent
 import { QuestionResult, EvaluationReport } from '@/types/evaluation';
