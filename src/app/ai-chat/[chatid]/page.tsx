@@ -4,13 +4,13 @@
 import EmptyState from '@/components/AIChat/emptyState';
 import { Input } from '@/components/AIChat/input';
 import AppLayout from '@/components/Layout/AppLayout';
-import React, { useState, useEffect, useRef, useLayoutEffect, useCallback,  HTMLAttributes } from 'react'; // Re-added HTMLAttributes for our custom type
+import React, { useState, useEffect, useRef, useLayoutEffect, useCallback, HTMLAttributes } from 'react';
 import { FiSend } from 'react-icons/fi';
 import { BsStars } from "react-icons/bs";
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import axios from 'axios';
-import Markdown, { Components } from 'react-markdown'; // Removed 'type CodeProps' import
+import Markdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialDark, materialLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
@@ -20,7 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Volume2, ChevronsUp, History as HistoryIcon, X, PlusCircle } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 
-import { Node } from 'unist'; // Keep Node import for the 'node' prop
+import { Node } from 'unist';
 
 // --- Type Definitions ---
 interface Message {
@@ -43,13 +43,11 @@ interface HistoryRecord {
   aiAgentType?: string;
 }
 
-// Custom type definition for react-markdown's code component props
 interface CustomMarkdownCodeProps extends HTMLAttributes<HTMLElement> {
-  node?: Node; // Type for the MDAST node
+  node?: Node;
   inline?: boolean;
   className?: string;
-  children?: React.ReactNode; // Made optional
-   // Index signature to capture any other arbitrary props (like react-markdown's ExtraProps)
+  children?: React.ReactNode;
 }
 // --- End Type Definitions ---
 
@@ -117,6 +115,7 @@ function ChatPage() {
       const result = await axios.post('/api/ai-chat', {
         userInput,
       });
+      // Type assertion here to tell TypeScript the expected shape of result.data
       setMessageList(prev => [...prev, result.data as Message]);
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -139,8 +138,10 @@ function ChatPage() {
     setLoading(true);
     try {
       const result = await axios.get('/api/history?recordId=' + chatid);
-      if ('content' in result.data && Array.isArray(result.data.content) && result.data.content.length > 0) {
-        setMessageList(result.data.content as MessagePart[]);
+      // Explicitly cast result.data to HistoryRecord to access its properties
+      const historyData = result.data as HistoryRecord; // <-- Type assertion here
+      if ('content' in historyData && Array.isArray(historyData.content) && historyData.content.length > 0) {
+        setMessageList(historyData.content as MessagePart[]);
       } else {
         setMessageList([{ content: 'Hello! How can I assist you today?', role: 'assistant', type: 'text' }]);
       }
@@ -231,7 +232,8 @@ function ChatPage() {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         console.log('Audio recorded:', audioBlob);
         toast('Processing audio...');
-        setUserInput('This is a simulated voice input for testing purposes.'); // Simulated response
+        // This is a simulated response. In a real app, you'd send audioBlob to an API for transcription.
+        setUserInput('This is a simulated voice input for testing purposes.');
         audioChunksRef.current = [];
       };
 
@@ -309,17 +311,17 @@ function ChatPage() {
 
   // --- Custom Markdown Renderer for Code Blocks ---
   const components: Components = {
-    code({ node, inline, className, children, ...props }: CustomMarkdownCodeProps) { // Using the type-safe CustomMarkdownCodeProps again
+    code({ node, inline, className, children, ...props }: CustomMarkdownCodeProps) {
       const match = /language-(\w+)/.exec(className || '');
       return !inline && match ? (
         <SyntaxHighlighter
-          style={isDark ? materialDark as any : materialLight as any} // Cast style to any
+          style={isDark ? materialDark as any : materialLight as any}
           language={match[1]}
           PreTag="div"
           {...props}
           className="rounded-md"
         >
-          {String(children || '').replace(/\n$/, '')} {/* Ensure children is treated as string, handle undefined/null */}
+          {String(children || '').replace(/\n$/, '')}
         </SyntaxHighlighter>
       ) : (
         <code className={className} {...props}>
@@ -353,7 +355,7 @@ function ChatPage() {
         </motion.button>
 
         {/* Main Content Area (Chat + Input) */}
-        <div className={`flex flex-col flex-grow relative overflow-hidden ${showSidebar ? 'mr-[250px] transition-all duration-300' : ''}`}>
+        <div className={`flex flex-col flex-grow relative overflow-hidden ${showSidebar ? 'lg:mr-[250px] transition-all duration-300' : ''}`}> {/* Added lg: to mr-[250px] */}
              {/* Main Chat Messages Area */}
             <div ref={scrollableChatContainerRef} className="flex-grow overflow-y-auto w-full px-4 sm:px-6 lg:px-8 pb-4 custom-scrollbar relative">
                 <div className="w-full max-w-4xl mx-auto py-4">
@@ -536,7 +538,7 @@ function ChatPage() {
                                   animate={{ opacity: 1, y: 0, scale: 1 }}
                                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                   transition={{ duration: 0.2 }}
-                                  className={`absolute bottom-[100px] -left-0.1 -translate-x-1/2 p-4 rounded-xl shadow-2xl z-30
+                                  className={`absolute bottom-[100px] left-1/2 -translate-x-1/2 p-4 rounded-xl shadow-2xl z-30
                                               ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}
                                               text-center ${isDark ? 'text-gray-200' : 'text-gray-800'}`}
                               >
