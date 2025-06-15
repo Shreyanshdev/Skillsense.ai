@@ -4,12 +4,11 @@ import { HistoryTable } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import { EvaluationReport } from '@/types/evaluation';
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { reviewSessionId: string } }
-) {
+export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  const { reviewSessionId } = context.params;
+
+  const pathname = request.nextUrl.pathname;
+  const reviewSessionId = pathname.split('/').pop(); // Extract dynamic segment
 
   console.log(`[${new Date().toISOString()}] API Call received: /api/evaluation-report/${reviewSessionId}`);
 
