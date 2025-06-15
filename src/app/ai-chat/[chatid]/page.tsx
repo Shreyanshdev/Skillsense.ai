@@ -13,7 +13,7 @@ import axios from 'axios';
 import Markdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { materialDark, materialLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { materialDark, materialLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useParams, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
