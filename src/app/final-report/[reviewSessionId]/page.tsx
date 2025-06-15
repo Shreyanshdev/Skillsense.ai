@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { SunIcon, MoonIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'; // Using Heroicons for a cleaner look
 import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from '@/redux/slices/themeSlice';
@@ -40,7 +40,7 @@ export default function FinalReportPage() {
   const specialCardGradientHover = 'hover:from-teal-600 hover:to-cyan-700';
 
   // Framer Motion Variants for Staggered & Elegant Entry
-  const sectionVariants = {
+  const sectionVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
