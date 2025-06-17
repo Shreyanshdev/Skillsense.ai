@@ -1,127 +1,167 @@
-# SkillSense.AI
+# 🚀 SkillSense.AI – Your AI Career Companion
 
-A web-based AI-driven career and skill evaluation platform for students, built with Next.js, TypeScript, and Tailwind CSS. SkillSense.AI helps users assess their current skills, generate personalized learning goals, receive resume feedback, and visualize career paths, all powered by intelligent AI recommendations.
+[![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge&logo=vercel)](https://skillsense-ai-iota.vercel.app/)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-## Table of Contents
+**SkillSense.AI** is an AI-powered career and skill evaluation platform that helps users understand their strengths, receive intelligent feedback, and navigate personalized upskilling paths. Built with **Next.js**, **TypeScript**, **Tailwind CSS**, and powered by **Gemini AI**, it combines tech, psychology, and design to supercharge your career journey.
 
-1. [Features](#features)
-2. [Demo](#demo)
-3. [Tech Stack](#tech-stack)
-4. [Project Structure](#project-structure)
-5. [Installation](#installation)
-6. [Environment Variables](#environment-variables)
-7. [Usage](#usage)
-8. [Contributing](#contributing)
-9. [License](#license)
+---
 
-## Features
+## 📸 Demo
 
-* **AI Questionnaire & Scoring**: 15+ tailored questions based on selected career roles to evaluate user proficiency.
-* **Personalized Learning Goals**: AI generates realistic daily goals and a progress tracker with streaks, similar to LeetCode.
-* **Voice Input/Output (Optional)**: Users can answer questions via voice and receive audio feedback.
-* **User Progress Dashboard**: Monitor progress, streaks, and revision summaries at the end of each day.
-* **AI-Based Resume Feedback**: Analyze uploaded resumes for ATS optimization, readability, and keyword suggestions.
-* **Interview Preparation Tool**: Practice common interview questions with AI-driven feedback on responses.
-* **Job/Internship Matching & Gamification**: Match users to opportunities and earn badges for completing learning milestones.
-* **AI-Powered Career Path Visualization**: Interactive timeline of potential career milestones and next steps.
-* **Community Forum**: Ask questions, discuss topics, and share experiences with peers.
-* **Skill Gap & Soft Skill Analysis**: Identify missing technical and soft skills and receive suggestions to bridge gaps.
+Explore the live platform: [https://skillsense-ai-iota.vercel.app/](https://skillsense-ai-iota.vercel.app/)
 
-## Demo
+<p align="center">
+  <img src="public/landing.png" alt="Landing Page" width="600" />
+  <img src="public/dashBoard.png" alt="Dashboard" width="600" />
+  <img src="public/testReport.png" alt="Test Report" width="600" />
+</p>
 
-Insert screenshots or GIFs showcasing the landing page, dashboard, and AI interactions.
+---
 
-## Tech Stack
+## ✨ Features
 
-* **Frontend**: Next.js, React, TypeScript, Tailwind CSS
-* **State Management**: \[Your choice, e.g., Zustand or Redux]
-* **API & AI**: OpenAI API, REST/GraphQL endpoints
-* **Authentication**: NextAuth.js (or custom JWT, Firebase Auth)
-* **Database**: PostgreSQL / MongoDB
-* **Deployment**: Vercel / Netlify
+- 🎯 **AI Skill Evaluation** – Role-based adaptive assessments
+- 📈 **Goal Tracker** – Daily personalized learning goals with streaks & badges
+- 🎤 **Voice Input & Output** – Answer via speech, receive AI audio feedback
+- 📊 **Dashboard** – Track goals, skill growth & performance summaries
+- 📄 **Resume Analyzer** – Upload and receive ATS-ready feedback instantly
+- 🧠 **Interview Simulator** – Practice interviews and get real-time AI critique
+- 🗺️ **Career Path Visualizer** – See your next steps and career projections
+- 🧩 **Soft Skill Gap Analysis** – Identify communication, teamwork & other gaps
+- 🧵 **Community Forum** – Connect, share, and learn (Coming Soon)
+- 🕹️ **Gamification** – Earn badges, track progress, and stay motivated
 
-## Project Structure
+---
+
+## 🛠 Tech Stack
+
+- **Frontend:** Next.js, React, TypeScript, Tailwind CSS
+- **Backend:** Node.js (API Routes), MongoDB & PostgreSQL
+- **State Management:** Redux Toolkit
+- **AI Engine:** Gemini API, INNGEST
+- **Authentication:** NextAuth.js (OTP + JWT)
+- **Deployment:** Vercel
+
+---
+
+## 📁 Project Structure
+
+Skillsense.ai/
+├── public/              # Static assets and images for the demo
+├── src/
+│   ├── app/             # Core application routing and pages
+│   │   ├──--(All pages)/      # Authentication routes (login, signup)/Dashboard
+│   │   /-----(Landing page) 
+│   │   └── api/         # API route handlers for all backend logic
+│   ├── components/      # Reusable React components (UI, layout, etc.)
+│   ├── inngest/         # Inngest functions for background jobs
+│   ├── lib/             # Utility functions, DB schema, and connections
+│   ├── redux/           # Redux Toolkit store, slices, and actions
+│   └── types/           # TypeScript type definitions
+├── .env.example         # Example environment variables
+├── drizzle.config.ts    # Drizzle ORM configuration
+├── next.config.mjs      # Next.js configuration
+└── package.json         # Project dependencies and scripts
+
+
+
+
+---
+
+## ⚙️ Installation
+
+1. **Clone the repo**
 
 ```bash
-├── public/              # Static assets (images, fonts)
-├── src/
-│   ├── components/      # Reusable UI components
-│   ├── hooks/           # Custom React hooks
-│   ├── pages/           # Next.js pages and API routes
-│   │   ├── api/         # Serverless functions
-│   │   └── _app.tsx     # App wrapper
-│   ├── services/        # API clients and AI utilities
-│   ├── store/           # State management setup
-│   ├── styles/          # Global CSS / Tailwind config
-│   └── utils/           # Helper functions
-├── .env.example         # Sample environment variables
-├── next.config.js       # Next.js configuration
-├── tailwind.config.js   # Tailwind CSS configuration
-└── package.json         # NPM scripts & dependencies
+git clone https://github.com/Shreyanshdev/Skillsense.ai.git
+cd skillsense.ai
+```
+Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
+Setup environment variables
+
+```bash
+
+cp .env.example .env.local
+Fill in values like:
+
+GOOGLE_API_KEY
+
+DATABASE_URL
+
+JWT_SECRET
+
+MONGODB_URI
+
+NEXTAUTH_SECRET
+
+INNGEST_SIGNING_KEY, etc.
+```
+Run dev server
+
+```bash
+
+npm run dev
+Open http://localhost:3000 🚀
+```
+🔑 Environment Variables
+env
+```
+GOOGLE_API_KEY=
+DATABASE_URL=
+JWT_SECRET=
+MONGODB_URI=
+NEXTAUTH_SECRET=
+NEXT_PUBLIC_OPENAI_API_KEY=
+NEXT_PUBLIC_BACKEND_CODE_EXECUTION_URL=
+INNGEST_SIGNING_KEY=
+MAIL_HOST=
+MAIL_USER=
+MAIL_PASS=
+IMAGEKIT_PUBLIC_KEY=
+IMAGEKIT_PRIVATE_KEY=
+IMAGEKIT_URL_ENDPOINT=
+```
+💡 Usage Guide
+✅ Signup / Login with OTP verification
+
+🧠 Select Career Role to begin personalized AI-based evaluation
+
+🎤 Answer Questions via text or voice
+
+📊 Track Goals and maintain daily streaks
+
+📄 Upload Resume for instant AI feedback
+
+🧪 Practice Interviews and receive AI tips
+
+🏅 Earn Badges & explore career roadmap
+
+🤝 Contributing
+Contributions are welcome!
+
+```bash
+
+git checkout -b feature/YourFeature
+git commit -m "Added YourFeature"
+git push origin feature/YourFeature
+Then create a Pull Request ✨
+Please follow coding conventions and add tests when applicable.
 ```
 
-## Installation
+📜 License
+This project is licensed under the MIT License – see the LICENSE file for details.
 
-1. **Clone the repository**
+## Made with ❤️ by @Shreyanshdev ##
 
-   ```bash
-   git clone https://github.com/<username>/skillsense.ai.git
-   cd skillsense.ai
-   ```
 
-2. **Install dependencies**
 
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
 
-3. **Set up environment variables**
 
-   * Copy `.env.example` to `.env.local`
-   * Fill in your keys (e.g., OpenAI API key, database URL)
 
-4. **Run the development server**
 
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Environment Variables
-
-```dotenv
-NEXT_PUBLIC_OPENAI_API_KEY=your_openai_api_key
-DATABASE_URL=your_database_connection_string
-NEXTAUTH_SECRET=some_random_secret
-```
-
-## Usage
-
-* **Register / Login**: Securely sign up or log in to access personalized features.
-* **Select Role**: Choose a career role to tailor AI questions and goals.
-* **Answer Questions**: Complete the AI-driven assessment (voice or text).
-* **Track Progress**: View your dashboard for streaks, badges, and goal summaries.
-* **Upload Resume**: Get instant feedback to optimize for ATS and readability.
-* **Practice Interviews**: Use the interview tool to rehearse and improve responses.
-* **Join Community**: Participate in discussions, ask questions, and share resources.
-
-## Contributing
-
-Contributions are welcome! To contribute:
-
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/YourFeature`
-3. Commit your changes: `git commit -m "Add YourFeature"`
-4. Push to the branch: `git push origin feature/YourFeature`
-5. Open a Pull Request.
-
-Please follow the existing code style and include relevant tests.
-
-## License
-
-Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
