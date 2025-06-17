@@ -1,6 +1,6 @@
 import { serve } from "inngest/next";
 import { inngest } from "../../../inngest/client";
-import { AiCareerAgent, AiResumeAgent, AiRoadmapAgent } from "@/inngest/functions";
+import {  AiResumeAgent, AiRoadmapAgent } from "@/inngest/functions";
 import { evaluateTestFunction } from "@/inngest/test-evaluation";
 
 
@@ -10,7 +10,7 @@ export const { GET, POST, PUT } = serve({
   functions: [
     /* your functions will be passed here later! */
     
-    AiCareerAgent,
+    //AiCareerAgent,
     AiResumeAgent,
     evaluateTestFunction,
     AiRoadmapAgent
