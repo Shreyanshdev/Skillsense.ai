@@ -1,5 +1,4 @@
 // src/redux/features/loading/loadingSlice.ts
-// Redux slice for managing a global loading state
 
 import { createSlice } from '@reduxjs/toolkit';
 

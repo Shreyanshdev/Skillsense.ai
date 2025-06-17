@@ -17,10 +17,13 @@ import { materialDark, materialLight } from 'react-syntax-highlighter/dist/esm/s
 import { useParams, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Volume2, ChevronsUp, History as HistoryIcon, X, PlusCircle } from 'lucide-react';
+import { Mic, Volume2,  History as HistoryIcon, X, PlusCircle, ChevronsDown } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
-
+import JSONPretty from 'react-json-pretty';
+import 'react-json-pretty/themes/monikai.css';
 import { Node } from 'unist';
+import { ChatMessage } from '@/components/AIChat/MarkdownComponents';
+
 
 // --- Type Definitions ---
 interface Message {
@@ -42,15 +45,6 @@ interface HistoryRecord {
   id?: number;
   aiAgentType?: string;
 }
-
-interface CustomMarkdownCodeProps extends HTMLAttributes<HTMLElement> {
-  node?: Node;
-  inline?: boolean;
-  className?: string;
-  children?: React.ReactNode;
-}
-// --- End Type Definitions ---
-
 
 function ChatPage() {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
@@ -103,20 +97,33 @@ function ChatPage() {
     }
   }, [messageList, loading]);
 
+  //Send UserInput to Ai
   const handleSendMessage = async () => {
     if (!userInput.trim()) return;
-
+  
     setLoading(true);
+  
     const userMessage: Message = { content: userInput, role: 'user', type: 'text' };
+    console.log([...messageList]);
+    const updatedMessageList = [...messageList, userMessage];
+    setMessageList(updatedMessageList);
     setUserInput('');
-    setMessageList(prev => [...prev, userMessage]);
-
+  
     try {
-      const result = await axios.post('/api/ai-chat', {
-        userInput,
-      });
-      // Type assertion here to tell TypeScript the expected shape of result.data
-      setMessageList(prev => [...prev, result.data as Message]);
+      // Include last few exchanges (user + assistant), NOT just user
+      const trimmedHistory = updatedMessageList.slice(-8); // ideally even 10-12, depending on cost
+      
+  
+      // In your handleSendMessage()
+        const result = await axios.post<Message>("/api/ai-chat", {
+          messages: [
+            ...messageList,               // your state: array of {role, content, type} here we can also send trimmedHistory else we can also trim this at backend
+            { role: "user", content: userInput, type: "text" }
+          ]
+        });
+        console.log(result.data);
+      setMessageList(prev => [...prev, result.data]);
+
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error('Failed to send message. Please try again.');
@@ -126,13 +133,11 @@ function ChatPage() {
         type: 'text'
       }]);
     } finally {
-      setUserInput('');
       setLoading(false);
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
+      inputRef.current?.focus();
     }
   };
+  
 
   const GetMessageList = useCallback(async () => {
     setLoading(true);
@@ -170,13 +175,46 @@ function ChatPage() {
   const fetchChatHistoryList = useCallback(async () => {
     try {
         const response = await axios.get<HistoryRecord[]>('/api/history');
-        // Filter history records where aiAgentType is '/ai-chat'
-        const filteredHistory = response.data.filter(record => record.aiAgentType === '/ai-chat');
-        const formattedHistory = filteredHistory.map(record => ({
+        //1. Filter history records where aiAgentType is '/ai-chat' and sort it like today history will be on top
+        const filteredHistory = response.data.filter(record => record.aiAgentType === '/ai-chat')
+                                              .sort((a, b) =>
+                                                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                                              );
+
+        // 2. Build titles based on recency
+        const now = new Date();
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+
+        const formattedHistory = filteredHistory.map(record => {
+          const d = new Date(record.createdAt);
+          const timeOpts: Intl.DateTimeFormatOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          };
+          let dateLabel: string;
+          if (d.toDateString() === now.toDateString()) {
+            dateLabel = `Today ${d.toLocaleTimeString([], timeOpts)}`;
+          } else if (d.toDateString() === yesterday.toDateString()) {
+            dateLabel = `Yesterday ${d.toLocaleTimeString([], timeOpts)}`;
+          } else {
+            const dateOpts: Intl.DateTimeFormatOptions = {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            };
+            dateLabel = `${d.toLocaleDateString([], dateOpts)} ${d.toLocaleTimeString([], timeOpts)}`;
+          }
+          return {
             ...record,
-            title: record.title || `Chat ${record.recordId.substring(0, 8)}`
-        }));
+            // use existing title if provided, otherwise our new dateLabel
+            title: record.title || dateLabel
+          };
+        });
+
         setChatHistoryList(formattedHistory);
+
     } catch (error) {
         console.error("Error fetching chat history list:", error);
         toast.error('Failed to load chat history list.');
@@ -306,30 +344,9 @@ function ChatPage() {
 
   const primaryBtnBg = 'bg-gradient-to-br from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700';
   const primaryBtnText = 'text-white';
+  const ease = [0.25, 0.1, 0.25, 1];
 
   const headerTextGradient = isDark ? 'bg-gradient-to-r from-sky-400 to-blue-600' : 'bg-gradient-to-r from-blue-600 to-sky-700';
-
-  // --- Custom Markdown Renderer for Code Blocks ---
-  const components: Components = {
-    code({ node, inline, className, children, ...props }: CustomMarkdownCodeProps) {
-      const match = /language-(\w+)/.exec(className || '');
-      return !inline && match ? (
-        <SyntaxHighlighter
-          style={isDark ? materialDark as any : materialLight as any}
-          language={match[1]}
-          PreTag="div"
-          {...props}
-          className="rounded-md"
-        >
-          {String(children || '').replace(/\n$/, '')}
-        </SyntaxHighlighter>
-      ) : (
-        <code className={className} {...props}>
-          {children}
-        </code>
-      );
-    },
-  };
 
   const showEmptyState = messageList.length === 1 && messageList[0].role === 'assistant' && messageList[0].content === 'Hello! How can I assist you today?' && !loading;
 
@@ -344,7 +361,7 @@ function ChatPage() {
           whileTap={{ scale: 0.95 }}
           onClick={onNewChat}
           className={`fixed top-4 left-4 z-50 inline-flex items-center space-x-2 px-5 py-2 rounded-full font-semibold text-base
-                     transition-all duration-300 ease-in-out ${primaryBtnBg} ${primaryBtnText}
+                     transition-all duration-300 ease-in-out ${primaryBtnBg} ${primaryBtnText} cursor-pointer
                      shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-400 focus:ring-offset-2
                      ${isDark ? 'focus:ring-offset-gray-900' : 'focus:ring-offset-white'} cursor-pointer
                      transform hover:-translate-y-0.5
@@ -390,10 +407,10 @@ function ChatPage() {
                                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} items-start group`}
                             >
                                 <div
-                                className={`max-w-[80%] p-4 rounded-xl shadow-md ${
+                                className={`max-w-[100%] p-4 rounded-xl shadow-md ${
                                     message.role === 'user'
-                                    ? `${userBubbleBg} ${userBubbleText}`
-                                    : `${assistantBubbleBg} ${assistantBubbleText} ${assistantBubbleShadow}`
+                                    ? `${userBubbleBg} ${userBubbleText}` 
+                                    : 'bg-transparent'
                                 }`}
                                 style={{
                                     borderRadius: message.role === 'user'
@@ -401,9 +418,7 @@ function ChatPage() {
                                     : '1.25rem 1.25rem 1.25rem 0.35rem'
                                 }}
                                 >
-                                <Markdown components={components} remarkPlugins={[remarkGfm]}>
-                                    {message.content}
-                                </Markdown>
+                                <ChatMessage content={message.content} isDark={isDark} />
                                 </div>
                                 {/* Speaker Button BESIDE AI responses */}
                                 {message.role === 'assistant' && message.type === 'text' && (
@@ -412,8 +427,9 @@ function ChatPage() {
                                         whileTap={{ scale: 0.9 }}
                                         onClick={() => speakText(message.content)}
                                         className={`ml-2 p-2 rounded-full transition-all duration-200
-                                        ${isDark ? 'bg-gray-700/70 hover:bg-gray-600/70 text-gray-300' : 'bg-gray-200/70 hover:bg-gray-300/70 text-gray-700'}
-                                        flex-shrink-0 self-center`}
+                                        ${isDark ? `bg-gray-700/70 hover:bg-gray-600/70 hover:${inputShadowClass} hover:${inputFocusEffect} text-gray-300` 
+                                                : `bg-gray-200/70 hover:bg-gray-300/70 text-gray-700 hover:${inputShadowClass} hover:${inputFocusEffect}`}
+                                        flex-shrink-0 self-baseline-last cursor-pointer`}
                                         aria-label="Listen to response"
                                     >
                                         <Volume2 size={20} />
@@ -455,11 +471,11 @@ function ChatPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 50 }}
                     onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })}
-                    className={`fixed bottom-[100px] right-6 sm:right-8 p-3 rounded-full shadow-lg z-40
+                    className={`fixed bottom-[100px] right-6 sm:right-8 p-3 rounded-full shadow-lg z-40 cursor-pointer
                                 ${primaryBtnBg} ${primaryBtnText} `}
                     aria-label="Scroll to bottom"
                     >
-                    <ChevronsUp size={24} />
+                    <ChevronsDown size={24} />
                     </motion.button>
                 )}
             </div>
@@ -538,7 +554,7 @@ function ChatPage() {
                                   animate={{ opacity: 1, y: 0, scale: 1 }}
                                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                   transition={{ duration: 0.2 }}
-                                  className={`absolute bottom-[100px] left-1/2 -translate-x-1/2 p-4 rounded-xl shadow-2xl z-30
+                                  className={`absolute bottom-[100px] left-0.1 -translate-x-1/2 p-4 rounded-xl shadow-2xl z-30 
                                               ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}
                                               text-center ${isDark ? 'text-gray-200' : 'text-gray-800'}`}
                               >
@@ -561,62 +577,93 @@ function ChatPage() {
 
         {/* Right Sidebar for Chat History */}
         <AnimatePresence>
-            {showSidebar && (
-                <motion.div
-                    initial={{ x: '100%' }}
-                    animate={{ x: 0 }}
-                    exit={{ x: '100%' }}
-                    transition={{ duration: 0.3 }}
-                    className={`fixed right-0 top-0 h-full w-[250px] z-40
-                                ${isDark ? 'bg-gray-900/80 border-l border-gray-700' : 'bg-white/80 border-l border-gray-200'}
-                                backdrop-blur-md overflow-y-auto custom-scrollbar flex flex-col`}
-                >
-                    <div className="p-4 flex items-center justify-between border-b border-dashed">
-                        <h3 className={`font-bold text-lg ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
-                            Chat History
-                        </h3>
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setShowSidebar(false)}
-                            className={`p-1 rounded-full ${isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}
-                        >
-                            <X size={20} />
-                        </motion.button>
-                    </div>
-                    <ul className="p-4 space-y-2 flex-grow">
-                        {chatHistoryList.length === 0 ? (
-                            <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>No recent chats.</p>
-                        ) : (
-                            chatHistoryList.map((record) => (
-                                <li key={record.recordId}>
-                                    <motion.button
-                                        whileHover={{ x: 5 }}
-                                        onClick={() => {
-                                            router.push(`/ai-chat/${record.recordId}`);
-                                            setShowSidebar(false);
-                                        }}
-                                        className={`block w-full text-left p-2 rounded-lg text-sm
-                                                    ${isDark ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'}
-                                                    transition-colors duration-200
-                                                    ${chatid === record.recordId ? `${primaryBtnBg} ${primaryBtnText} font-semibold` : ''}`}
-                                    >
-                                        {record.title}
-                                    </motion.button>
-                                </li>
-                            ))
-                        )}
-                    </ul>
-                </motion.div>
-            )}
-        </AnimatePresence>
+      {showSidebar && (
+        <>
+          {/* sidebar */}
+          <motion.div
+            key="sidebar"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ duration: 0.4, ease :[0.25, 0.1, 0.25, 1]  }}
+            className={`
+              fixed right-0 top-0 h-full w-64 z-40 flex flex-col
+              backdrop-blur-lg
+              ${isDark 
+                ? "bg-gray-900/90 border-l border-gray-700" 
+                : "bg-white/90 border-l border-gray-200"}
+              custom-scrollbar
+            `}
+          >
+            {/* sticky header */}
+            <div className={`
+              sticky top-0 z-50 flex items-center justify-between px-4 py-3
+              ${isDark 
+                ? "bg-gray-900/95 border-b border-gray-700" 
+                : "bg-white/95 border-b border-gray-200"}
+            `}>
+              <h3 className={`text-lg font-bold ${isDark ? "text-gray-100" : "text-gray-900"}`}>
+                Chat History
+              </h3>
+              <motion.button
+                whileHover={{ rotate: 90 }}
+                whileTap={{ scale: 0.8 }}
+                onClick={() => setShowSidebar(false)}
+                className={`
+                  p-2 rounded-full transition-colors
+                  ${isDark 
+                    ? "text-gray-400 hover:bg-gray-700" 
+                    : "text-gray-600 hover:bg-gray-200"}
+                `}
+              >
+                <X size={20} />
+              </motion.button>
+            </div>
+
+            {/* list */}
+            <ul className="flex-grow overflow-y-auto p-4 space-y-2">
+              {chatHistoryList.length === 0 ? (
+                <p className={`${isDark ? "text-gray-400" : "text-gray-500"} text-sm`}>
+                  No recent chats.
+                </p>
+              ) : (
+                chatHistoryList.map(record => {
+                  const isActive = record.recordId === chatid
+                  return (
+                    <li key={record.recordId}>
+                      <motion.button
+                        whileHover={{ x: 8 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => {
+                          router.push(`/ai-chat/${record.recordId}`)
+                          setShowSidebar(false)
+                        }}
+                        className={`
+                          block w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200
+                          ${isDark 
+                            ? "text-gray-300 hover:bg-gray-800" 
+                            : "text-gray-700 hover:bg-gray-100"}
+                          ${isActive ? `${primaryBtnBg} ${primaryBtnText} font-semibold` : ""}
+                        `}
+                      >
+                        {record.title}
+                      </motion.button>
+                    </li>
+                  )
+                })
+              )}
+            </ul>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
 
         {/* Toggle Sidebar Button (Fixed Top-Right) */}
         <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setShowSidebar(!showSidebar)}
-            className={`fixed top-4 right-4 z-50 p-3 rounded-full shadow-lg transition-all duration-300
+            className={`fixed top-4 right-4 z-50 p-3 rounded-full shadow-lg transition-all duration-300 cursor-pointer
                        ${isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white text-gray-800 hover:bg-gray-100'}
                        lg:hidden`}
             aria-label="Toggle chat history"
@@ -624,12 +671,12 @@ function ChatPage() {
             <HistoryIcon size={24} />
         </motion.button>
         {/* Always visible sidebar icon on large screens */}
-        <div className={`hidden lg:block fixed top-4 right-4 z-50`}>
+        <div className={`hidden lg:block fixed top-4 right-4 z-50 `}>
              <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setShowSidebar(!showSidebar)}
-                className={`p-3 rounded-full shadow-lg transition-all duration-300
+                className={`p-3 rounded-full shadow-lg transition-all duration-300 cursor-pointer
                            ${isDark ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-white text-gray-800 hover:bg-gray-100'}`}
                 aria-label="Toggle chat history"
             >

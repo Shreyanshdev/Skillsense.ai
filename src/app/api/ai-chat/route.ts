@@ -1,73 +1,78 @@
-// src/app/api/ai-chat/route.ts
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
-import axios from "axios";
-import { inngest } from "@/inngest/client";
+import { Message } from "@inngest/agent-kit";
 
-// Define a type for the expected structure of a run status object from Inngest
-// This helps eliminate 'any' and provides better type checking.
-interface InngestRunStatus {
-  status: "Completed" | "Running" | "Failed" | string; // Define possible statuses
-  output?: {
-    output: ArrayBuffer[]; // Assuming output can be an array of any type based on runStatus.data?.[0].output?.output[0]
-  };
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+const SYSTEM_PROMPT = `
+You are SkillSense.AI — a deeply insightful, proactive AI career mentor. You guide users in career growth, skill development, and strategy. You never repeat yourself, you always build on context, and you never ask the user to repeat information they’ve already given.
+
+When crafting your response, always format it as clean, reader‑friendly Markdown:
+
+1. **Main Title**  
+   - Use a single H1 (\`#\`) for the top‑level topic.
+
+2. **Sub‑headings**  
+   - Use H2 (\`##\`) and H3 (\`###\`) as needed to break content into logical sections.
+
+3. **Paragraphs & Emphasis**  
+   - Write clear, concise paragraphs.  
+   - Use **bold** to highlight key terms, and _italic_ for subtle emphasis.
+
+4. **Lists & Tables**  
+   - Use unordered lists (\`-\` or \`*\`) for bullet points.  
+   - Use ordered lists (\`1.\`, \`2.\`) for step‑by‑step instructions.  
+   - When comparing options or showing structured data, include Markdown tables.
+
+5. **Examples & Code Blocks**  
+   - When illustrating commands, code snippets, or JSON payloads, wrap them in triple‑backtick fences with the appropriate language tag (\`\`\`js\`, \`\`\`json\`).
+
+6. **Callouts & Tips**  
+   - If there’s a pro tip or caution, call it out clearly, for example:
+     > **Tip:** Always keep your resume up to date.
+
+Stay focused on career advice—no fluff or off‑topic content.  
+`
+
+function isTextMessage(m: Message): m is Extract<Message, { type: "text" }> {
+  return m.type === "text" && typeof m.content === "string";
 }
 
 export async function POST(req: Request) {
-  const { userInput } = await req.json();
-  if (!userInput || typeof userInput !== "string") {
-    return NextResponse.json({ error: "Missing userInput" }, { status: 400 });
+  const body = await req.json();
+  const messages: Message[] = body.messages;
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return NextResponse.json({ error: "Invalid or missing messages" }, { status: 400 });
   }
 
-  const resultIds = await inngest.send({
-    name: "AiCareerAgent",
-    data: { userInput },
-  });
+  const textMessages = messages.filter(isTextMessage).slice(-6); // limit history
 
-  const runId = resultIds?.ids?.[0];
-  if (!runId) {
-    return NextResponse.json({ error: "No runId returned from Inngest" }, { status: 500 });
+  const contents = [
+    {
+      role: "assistant",
+      parts: [{ text: SYSTEM_PROMPT }],
+    },
+    ...textMessages.map((msg) => ({
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: String(msg.content) }], // ✅ ensure it's a string
+    })),
+  ];
+
+  try {
+    const result = await model.generateContent({ contents });
+    const responseText = await result.response.text();
+
+    const reply: Extract<Message, { type: "text" }> = {
+      role: "assistant",
+      type: "text",
+      content: responseText,
+    };
+
+    return NextResponse.json(reply);
+  } catch (err) {
+    console.error("Gemini error:", err);
+    return NextResponse.json({ error: "Gemini response failed" }, { status: 500 });
   }
-
-  let runStatus: { data: InngestRunStatus[] } | undefined; 
-  let attempts = 0;
-  const maxAttempts = 100; // Maximum number of polling attempts, roughly 15 seconds (30 * 500ms)
-
-  while (attempts < maxAttempts) {
-
-    runStatus = await getRuns(runId);
-
-    if (Array.isArray(runStatus?.data) && runStatus.data[0]?.status === "Completed") {
-      break; 
-    }
-    attempts++; // Increment attempt counter.
-   
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-
-  // If the loop completes without the run status being "Completed", it means a timeout occurred.
-  if (attempts >= maxAttempts) {
-    return NextResponse.json(
-      { error: "Timeout waiting for Inngest to complete" },
-      { status: 504 } 
-    );
-  }
-
-  return NextResponse.json(runStatus?.data?.[0]?.output?.output?.[0]);
-}
-
-/**
- * Fetches the status of a specific Inngest run.
- *
- * @param runId The ID of the Inngest run to fetch.
- * @returns The data returned from the Inngest runs API.
- */
-async function getRuns(runId: string): Promise<{ data: InngestRunStatus[] }> {
-  // Construct the URL for the Inngest runs API.
-  const url = `${process.env.INNGEST_SERVER_HOST}/v1/events/${runId}/runs`;
-  // Make an authenticated GET request to the Inngest API.
-  const resp = await axios.get(url, {
-    headers: { Authorization: `Bearer ${process.env.INNGEST_API_KEY}` },
-  });
-  // Return the response data, casting it to the expected type for better type safety.
-  return resp.data as { data: InngestRunStatus[] };
 }
