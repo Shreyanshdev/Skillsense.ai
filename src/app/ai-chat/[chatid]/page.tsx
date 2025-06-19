@@ -1,4 +1,3 @@
-// src/components/AIChat/ChatPage.tsx
 "use client";
 
 import EmptyState from '@/components/AIChat/emptyState';
@@ -9,12 +8,11 @@ import { FiSend } from 'react-icons/fi';
 import { BsStars } from "react-icons/bs";
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import axios from 'axios';
-import { useParams, useRouter } from 'next/navigation';1
+import { useParams, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Volume2,  History as HistoryIcon, X, PlusCircle, ChevronsDown, VolumeX } from 'lucide-react';
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import 'react-json-pretty/themes/monikai.css';
 import { ChatMessage } from '@/components/AIChat/MarkdownComponents';
 import api from '@/services/api';
@@ -113,7 +111,7 @@ function ChatPage() {
       
   
       // In your handleSendMessage()
-        const result = await axios.post<Message>("/api/ai-chat", {
+      const result = await api.post<Message>("/ai-chat", {
           messages: [
             ...messageList,               // your state: array of {role, content, type} here we can also send trimmedHistory else we can also trim this at backend
             { role: "user", content: userInput, type: "text" }
@@ -159,7 +157,7 @@ function ChatPage() {
 
   const updateMessageList = useCallback(async () => {
     try {
-      await axios.put('/api/history',{
+      await api.put('/history',{
         content: messageList,
         recordId: chatid,
         aiAgentType: '/ai-chat'
@@ -238,7 +236,7 @@ function ChatPage() {
   const onNewChat = async () => {
     const newRecordId = uuidv4();
     try {
-      await axios.post('/api/history', {
+      await api.post('/history', {
         recordId: newRecordId,
         content: [],
         aiAgentType: '/ai-chat',
