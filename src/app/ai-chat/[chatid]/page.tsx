@@ -475,10 +475,8 @@ function ChatPage() {
                                         flex-shrink-0 self-baseline-last cursor-pointer`}
                                         aria-label="Listen to response"
                                     >{isSpeaking && currentUtteranceRef.current?.text === message.content ? (
-                                      // You can use an icon here, e.g., <FaStop /> if you have react-icons
                                       <VolumeX size={20} />
                                     ) : (
-                                      // You can use an icon here, e.g., <FaVolumeUp />
                                       <Volume2 size={20} />
                                     )}
                                         
