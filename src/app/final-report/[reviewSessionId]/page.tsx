@@ -11,7 +11,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toggleTheme } from '@/redux/slices/themeSlice';
 import AppLayout from '@/components/Layout/AppLayout';
 import type { RootState } from '@/redux/store';
-import type { EvaluationReport } from '@/types/evaluation'; // Ensure this path is correct
+import type { EvaluationReport } from '@/types/evaluation';
+import api from '@/services/api';
 
 // Initialize marked for markdown parsing
 marked.setOptions({ gfm: true, breaks: true });
@@ -54,7 +55,7 @@ export default function FinalReportPage() {
     },
   };
 
-  const containerVariants = {
+  const containerVariants:Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -73,9 +74,8 @@ export default function FinalReportPage() {
         return;
       }
       try {
-        const res = await fetch(`/api/evaluation-report/${reviewSessionId}`);
-        if (!res.ok) throw new Error('Failed to load report. Please try again.');
-        setReport(await res.json());
+        const res = await api.get(`/evaluation-report/${reviewSessionId}`);
+        setReport(res.data as EvaluationReport);
       } catch (e) {
         setError(e as string);
       } finally {

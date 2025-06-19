@@ -24,6 +24,7 @@ import SectionWrapper from '@/components/common/SectionWrapper';
 import ProficiencySelector from '@/components/common/ProficiencySelector';
 import { RootState } from '@/redux/store';
 import { EXPERIENCE_LEVELS, SelectedSkill, PROFICIENCY_LEVELS } from '@/constants';
+import api from '@/services/api';
 
 interface FocusTabProps {
   // State
@@ -119,9 +120,10 @@ const FocusTab: React.FC<FocusTabProps> = ({
         }
         setIsRoleLoading(true);
         try {
-          const res = await fetch(`/api/suggest-roles?query=${encodeURIComponent(query)}`);
-          const data = await res.json();
-          setRoleSuggestions(data.suggestions || []);
+          const res = await api.get(`/suggest-roles`, {
+            params: { query: query } // Pass query as params object for correct encoding
+          })
+          setRoleSuggestions(res.data.suggestions || []);
         } catch {
           setRoleSuggestions([]);
         } finally {
@@ -154,12 +156,11 @@ const FocusTab: React.FC<FocusTabProps> = ({
         }
         setIsSkillLoading(true);
         try {
-          const res = await fetch('/api/suggest-skills', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ role, selectedSkills: currentIds }),
+          const res = await api.post('/api/suggest-skills', {
+            role,
+            selectedSkills: currentIds,
           });
-          const data = await res.json();
+          const data = res.data;
           const filtered = (data.suggestions || []).filter(
             (s: string) => !currentIds.includes(s.toLowerCase().replace(/\W/g, ''))
           );

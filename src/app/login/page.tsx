@@ -13,6 +13,9 @@ import { useRouter } from 'next/navigation';
 // Assume GlobalBackground component exists at this path
 import GlobalBackground from '@/components/Landing/GlobalBackground';
 
+// IMPORT THE API SERVICE HERE
+import api from '@/services/api'; 
+
 export default function LoginPage() {
   const theme = useSelector((state: RootState) => state.theme.theme);
   const router = useRouter();
@@ -87,7 +90,7 @@ export default function LoginPage() {
     },
   };
 
-  // Handle form submission
+  // Handle form submission - UPDATED TO USE `api` INSTANCE
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -101,28 +104,40 @@ export default function LoginPage() {
     }
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      // Use the 'api' instance for the POST request
+      const res = await api.post('/auth/login', { email, password });
 
-      const data = await res.json();
+      // If the request was successful (2xx status), Axios does not throw an error.
+      // The access token is now in an httpOnly cookie, not in res.data.
+      console.log('Login successful. Redirecting to dashboard...');
+      // localStorage.setItem('token', data.token); // REMOVED: Token is httpOnly
+      router.replace('/dashboard');
 
-      if (res.ok && data.success) {
-        console.log('Login successful:', data);
-        localStorage.setItem('token', data.token);
-        router.replace('/dashboard');
+    } catch (error: any) {
+      // Axios throws an error for non-2xx responses (like 401, 500)
+      if (error.response && error.response.data && error.response.data.message) {
+        console.error('Login failed:', error.response.data.message);
+        setError(error.response.data.message);
       } else {
-        console.error('Login failed:', data.message);
-        setError(data.message || 'Login failed. Please try again.');
+        console.error('Login API error:', error);
+        setError('An unexpected error occurred during login. Please try again later.');
       }
-    } catch (error) {
-      console.error('Login API error:', error);
-      setError('An error occurred during login. Please try again later.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    const root = window.location.origin;
+    const params = new URLSearchParams({
+      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      redirect_uri: `${root}/api/auth/google`,
+      response_type: "code",
+      scope: "openid email profile",
+      access_type: "offline",        // if you need refresh tokens
+      prompt: "consent",             // to force account selection/consent
+    });
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   };
 
   return (
@@ -243,6 +258,7 @@ export default function LoginPage() {
             transition={{ duration: 0.5, delay: 0.8 }}
             whileHover={{ scale: 1.02, boxShadow: isDark ? '0 5px 20px rgba(234, 179, 8, 0.2)' : '0 5px 20px rgba(66, 133, 244, 0.2)' }}
             whileTap={{ scale: 0.98 }}
+            onClick={handleGoogleSignIn}
             className={`mt-8 w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-sm font-medium shadow-md cursor-pointer
               ${isDark
                 ? 'bg-gray-700 hover:bg-gray-600 text-white border-gray-600'

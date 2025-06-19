@@ -12,6 +12,8 @@ import GlobalBackground from '@/components/Landing/GlobalBackground';
 import toast from 'react-hot-toast'; // Import toast
 import React from 'react';
 import axios from 'axios';
+import api from '@/services/api'; 
+; // Import your custom axios instance
 
 interface AxiosError<T = any> extends Error {
   config: any;
@@ -156,7 +158,7 @@ export default function OnboardingPage() {
           email: formData.email,
           password: formData.password
         };
-        const { data } = await axios.post('/api/auth/signup', payload, {
+        const { data } = await api.post('/auth/signup', payload, {
           headers: { 'Content-Type': 'application/json' }
         });
         
@@ -202,6 +204,20 @@ export default function OnboardingPage() {
       } finally {
         setLoading(false);
       }
+    };
+
+    //Google signup 
+    const handleGoogleSignIn = () => {
+      const root = window.location.origin;
+      const params = new URLSearchParams({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        redirect_uri: `${root}/api/auth/google`,
+        response_type: "code",
+        scope: "openid email profile",
+        access_type: "offline",        // if you need refresh tokens
+        prompt: "consent",             // to force account selection/consent
+      });
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
     };
     
     // --- Framer Motion Variants ---
@@ -382,6 +398,7 @@ export default function OnboardingPage() {
                         transition={{ duration: 0.5, delay: 0.8 }}
                         whileHover={{ scale: 1.02, boxShadow: isDark ? '0 5px 20px rgba(234, 179, 8, 0.2)' : '0 5px 20px rgba(66, 133, 244, 0.2)' }}
                         whileTap={{ scale: 0.98 }}
+                        onClick ={handleGoogleSignIn}
                         className={`mt-8 w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-sm font-medium shadow-md cursor-pointer
                             ${isDark
                                 ? 'bg-gray-700 hover:bg-gray-600 text-white border-gray-600'

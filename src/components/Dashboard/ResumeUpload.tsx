@@ -6,10 +6,12 @@ import React, { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { FileUp, X, Loader2, Check, ArrowRight, UploadCloud } from 'lucide-react';
 import axios from 'axios';
+import api from '@/services/api';
 import { v4 as uuidv4 } from 'uuid';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { useRouter } from 'next/navigation';
+import { FaSpinner } from 'react-icons/fa';
 // import { set } from 'lodash'; // This import is not used and can be removed
 
 interface ResumeUploadDialogProps {
@@ -25,6 +27,7 @@ export const ResumeUploadDialog: React.FC<ResumeUploadDialogProps> = ({ isOpen, 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>('idle');
   const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isNavigating, setIsNavigating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -82,15 +85,8 @@ export const ResumeUploadDialog: React.FC<ResumeUploadDialogProps> = ({ isOpen, 
     const formData = new FormData();
     formData.append('resume', selectedFile);
     formData.append('recordId', newRecordId);
-    //formData.append('aiAgentType', '/ai-resume-analyzer'); // Specify the AI agent type
-    //send data to backend server
-
-
     try {
-      // NOTE: Your original code had an initial POST to /api/history before the actual resume upload.
-      // I'm assuming the /api/ai-resume-analyzer endpoint now handles both creating the history
-      // record AND processing the resume. If not, the initial history POST needs to be re-added.
-      const result = await axios.post('/api/ai-resume-analyzer', formData ,{
+      const result = await api.post('/ai-resume-analyzer', formData ,{
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       console.log(result.data)
@@ -102,14 +98,14 @@ export const ResumeUploadDialog: React.FC<ResumeUploadDialogProps> = ({ isOpen, 
       setUploadStatus('error');
       return;
     }
-
-    // Simulate analysis time if your API response is immediate
     await new Promise(resolve => setTimeout(resolve, 2000)); // Reduced simulation time slightly
     setUploadStatus('complete');
   };
 
-  const handleNext = () => {
+  const handleNext =async () => {
     if (currentRecordId) {
+      setIsNavigating(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
       onAnalyzeSuccess(currentRecordId);
       router.push(`/ai-resume-analyzer/${currentRecordId}`);
       onClose();
@@ -216,7 +212,16 @@ export const ResumeUploadDialog: React.FC<ResumeUploadDialogProps> = ({ isOpen, 
                   whileTap={{ scale: 0.95 }}
                   className="inline-flex items-center gap-x-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-indigo-700 hover:shadow-blue-500/30 transition-all duration-200"
                 >
-                  Next <ArrowRight size={20} />
+                 {isNavigating ? ( // Conditionally render spinner or text
+                    <>
+                      <FaSpinner className={`animate-spin ${theme === 'dark' ? 'text-blue-200' : 'text-blue-200'}`} />
+                      Navigating...
+                    </>
+                  ) : (
+                    <>
+                      Next <ArrowRight size={20} />
+                    </>
+                  )}
                 </motion.button>
               )}
             </div>

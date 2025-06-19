@@ -2,13 +2,13 @@
 import { useParams } from 'next/navigation';
 import React, {useEffect, useState } from 'react'
 import axios from 'axios';
+import api from '@/services/api'; 
 import AppLayout from '@/components/Layout/AppLayout';
 import ResumeAnalyzer from '@/components/AiResume/Report';
 
 interface ResumeAnalyzerRecordData {
   metadeta?: string; // Assuming 'metadeta' (should be 'metadata'?) is a string for the PDF URL
   content?: any;    // 'content' can be whatever structure your AI report has,
-                    // using 'any' for now or define a more specific type if known
 }
 function AiResumeAnalyzer() {
   const {recordid} = useParams();
@@ -19,7 +19,7 @@ function AiResumeAnalyzer() {
     const GetResumeAnalyzerRecord = async () => {
       if (typeof recordid === 'string') {
         try {
-          const result = await axios.get<ResumeAnalyzerRecordData>('/api/history?recordId=' + recordid);
+          const result = await api.get<ResumeAnalyzerRecordData>('/history?recordId=' + recordid);
           console.log("Resume Analyzer Record:", result.data);
           setPdfUrl(result.data?.metadeta);
           setAiReport(result.data?.content);

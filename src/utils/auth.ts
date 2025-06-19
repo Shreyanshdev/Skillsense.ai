@@ -1,103 +1,75 @@
 // src/utils/auth.ts (or src/lib/auth.ts)
 import { NextRequest } from "next/server";
 import jwt from 'jsonwebtoken';
-import User from '@/models/User'; // Assuming your Mongoose User model is here
-import { connectDB } from '@/lib/dbconnect'; // Assuming your MongoDB connection utility is here
+// IMPORTANT: Removed User model import and connectDB import.
+// import User from '@/models/User';
+// import { connectDB } from '@/lib/dbconnect';
 
-interface UserAuthInfo {
+// Define the shape of your Access Token payload
+interface AccessTokenPayload extends jwt.JwtPayload {
+    id: string; // The user's MongoDB _id
     email: string;
-    username: string; // Add username to the interface
+    username: string; // Ensure this matches the field in your User model
 }
 
-export async function getMongoUserAuthInfoFromRequest(req: NextRequest): Promise<UserAuthInfo | null> {
+/**
+ * Extracts user authentication information (email, username, id) directly from the JWT in the request cookies.
+ * Does NOT perform a database lookup for user details, relying solely on the JWT payload.
+ *
+ * @param req The NextRequest object.
+ * @returns An object containing user id, email, and username, or null if token is invalid/missing data.
+ */
+export async function getMongoUserAuthInfoFromRequest(req: NextRequest): Promise<AccessTokenPayload | null> {
     const token = req.cookies.get('token')?.value || ''; // Get token from httpOnly cookie
 
     if (!token) {
-        console.warn("MongoDB Auth: No authentication token found in cookies.");
+        // In a real application, you might want to return a specific error type
+        // or re-direct to login if called in a protected route handler.
         return null;
     }
 
     try {
-        // Verify the JWT token
         if (!process.env.JWT_SECRET) {
-            console.error("MongoDB Auth: JWT_SECRET environment variable is not defined.");
-            return null;
-        }
-        const decodedToken: any = jwt.verify(token, process.env.JWT_SECRET);
-
-        // The token payload contains { id: user._id }
-        const userId = decodedToken.id;
-
-        if (!userId) {
-            console.warn("MongoDB Auth: JWT decoded but no userId found.");
+            // This is a critical configuration error, should be caught at app startup or deployment.
+            // For a serverless function, it's safer to throw or return null.
             return null;
         }
 
-        // Ensure MongoDB connection is established before querying
-        await connectDB(); // Connect to MongoDB
+        // Verify the JWT token and cast it to our custom payload interface.
+        // This will throw if the token is invalid or expired.
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET) as AccessTokenPayload;
 
-        // Fetch the user from MongoDB using their ID to get email and username
-        // IMPORTANT: Replace 'username' with the actual field name in your User model if different (e.g., 'name')
-        const user = await User.findById(userId).select('email username'); // Select both email and username
-
-        if (!user) {
-            console.warn(`MongoDB Auth: User with ID ${userId} not found in DB.`);
+        // Check if essential data is present in the decoded token.
+        // This ensures the token was correctly structured by your backend.
+        if (!decodedToken.id || !decodedToken.email || !decodedToken.username) {
+            // Token is valid but missing expected payload fields.
             return null;
         }
 
-        console.log(`MongoDB Auth: User email retrieved: ${user.email}, Username: ${user.username}`);
-
-        // Return an object with both email and username
+        // Return the essential user info directly from the token.
         return {
-            email: user.email,
-            username: user.username || 'User' // Provide a fallback if username is null/undefined
+            id: decodedToken.id,
+            email: decodedToken.email,
+            username: decodedToken.username
         };
     } catch (error) {
-        console.error("MongoDB Auth: Error verifying JWT or fetching user:", error);
+        // JWT verification failed (e.g., TokenExpiredError, JsonWebTokenError, etc.).
+        // In a real application, this would typically lead to a re-authentication flow
+        // (e.g., redirect to login, trigger refresh token if client-side).
+        // Since we are strictly removing console logs, we just return null.
         return null;
     }
 }
 
+/**
+ * Extracts user email directly from the JWT in the request cookies.
+ * This function is a convenience wrapper around getMongoUserAuthInfoFromRequest.
+ *
+ * @param req The NextRequest object.
+ * @returns The user's email, or null if token is invalid/missing email.
+ */
 export async function getMongoUserEmailFromRequest(req: NextRequest): Promise<string | null> {
-    const token = req.cookies.get('token')?.value || ''; // Get token from httpOnly cookie
-
-    if (!token) {
-        console.warn("MongoDB Auth: No authentication token found in cookies.");
-        return null;
-    }
-
-    try {
-        // Verify the JWT token using the secret key stored in environment variables
-        if (!process.env.JWT_SECRET) {
-            console.error("MongoDB Auth: JWT_SECRET environment variable is not defined.");
-            return null;
-        }
-        const decodedToken: any = jwt.verify(token, process.env.JWT_SECRET);
-
-        // The token payload contains { id: user._id }
-        const userId = decodedToken.id;
-
-        if (!userId) {
-            console.warn("MongoDB Auth: JWT decoded but no userId found.");
-            return null;
-        }
-
-        // Ensure MongoDB connection is established before querying
-        await connectDB(); // Connect to MongoDB
-
-        // Fetch the user from MongoDB using their ID to get the email
-        // We do not select password here, as it's not needed.
-        const user = await User.findById(userId).select('email');
-
-        if (!user) {
-            console.warn(`MongoDB Auth: User with ID ${userId} not found in DB.`);
-            return null;
-        }
-
-        console.log(`MongoDB Auth: User email retrieved: ${user.email}`);
-        return user.email;
-    } catch (error) {
-        console.error("MongoDB Auth: Error verifying JWT or fetching user:", error);
-        return null;
-    }
+    const userInfo = await getMongoUserAuthInfoFromRequest(req);
+    // If userInfo is null, or email is missing, return null.
+    return userInfo?.email || null;
 }

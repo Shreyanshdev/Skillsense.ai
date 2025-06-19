@@ -8,7 +8,7 @@ import { FiArrowRight } from 'react-icons/fi';
 import { FaSpinner } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import axios from 'axios';
+import api from '@/services/api';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Layers, Map, FileText, Bot, ClipboardCheck } from 'lucide-react';
@@ -51,7 +51,7 @@ export const History = () => {
 
     try {
       // Assuming your API endpoint supports limit and offset for pagination
-      const result = await axios.get('/api/history', {
+      const result = await api.get('/history', {
         params: {
           limit: PAGE_SIZE,
           offset: offset,
@@ -131,9 +131,6 @@ export const History = () => {
     return { linkPath, icon, title, description };
   };
 
-  // Removed: const filteredHistory = useMemo(() => { ... });
-
-
   // Theme-based colors for the section container
   const sectionBgClass = isDark ? 'bg-gray-800/60' : 'bg-white/60';
   const sectionBorderClass = isDark ? 'border-gray-700/50' : 'border-gray-200/50';
@@ -184,7 +181,6 @@ export const History = () => {
         What you&apos;ve previously worked on can be found here.
       </motion.p>
 
-      {/* Removed Search Field UI */}
 
       {loadingHistory ? (
         <div className="flex flex-col items-center justify-center p-8 min-h-[150px]">

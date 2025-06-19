@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaClock, FaTrashAlt, FaSpinner, FaTimesCircle, FaInfoCircle} from 'react-icons/fa'; // Added FaQuestionCircle

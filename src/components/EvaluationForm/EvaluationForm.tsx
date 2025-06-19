@@ -11,6 +11,7 @@ import { setTestData, setTestLoading, setTestError, clearTestData } from '@/redu
 import debounce from 'lodash.debounce';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import api from '@/services/api';
 
 // Import the new tab components
 import FocusTab from './FocusTab';
@@ -201,17 +202,8 @@ const EvaluationForm: React.FC = () => {
         formData.append('resume', file);
 
         try {
-            const response = await fetch('/api/analyze-resume', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Resume analysis failed.' }));
-                throw new Error(errorData.error || 'Resume analysis failed.');
-            }
-
-            const result = await response.json();
+            const response = await api.post('/analyze-resume', formData);
+            const result = response.data;
             if (result && result.skills && Array.isArray(result.skills)) {
                 setAnalyzedSkills(result.skills);
                 toast.success('Resume analyzed successfully!');
@@ -324,18 +316,9 @@ const EvaluationForm: React.FC = () => {
     }
 
     try {
-        const response = await fetch('/api/generate-test', {
-            method: 'POST',
-            body: formData,
-        });
+        const response = await api.post('/generate-test', formData);
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Test generation failed.' }));
-            console.error('EvaluationForm: /api/generate-test failed with status:', response.status, errorData);
-            throw new Error(errorData.error || 'Test generation failed.');
-        }
-
-        const result = await response.json();
+        const result = response.data; 
         console.log('EvaluationForm: Test Generation Result Received:', result);
 
         if (result && result.rounds && result.rounds.length > 0) {

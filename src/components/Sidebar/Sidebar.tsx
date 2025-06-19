@@ -111,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     ${isDesktop ? 'shadow-lg' : 'shadow-2xl'}
   `;
 
-  const textVariants = {
+  const textVariants:Variants = {
     hidden: { opacity: 0, x: -20 },
     visible: { opacity: 1, x: 0, transition: { duration: 0.2 } },
     exit: { opacity: 0, x: -20, transition: { duration: 0.15 } },

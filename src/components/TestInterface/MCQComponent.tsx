@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variant, Variants } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { FaMicrophone, FaRegCircle, FaRegCheckCircle, FaFlag, FaVolumeUp } from 'react-icons/fa'; // Added FaFlag, FaVolumeUp
@@ -78,7 +78,7 @@ const MCQComponent: React.FC<MCQComponentProps> = ({
   };
 
 
-  const containerVariants = {
+  const containerVariants:Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 }

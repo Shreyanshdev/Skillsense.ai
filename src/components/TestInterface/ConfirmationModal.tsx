@@ -21,8 +21,6 @@ interface ConfirmationModalProps {
     testData: TestData | null; // Full test data to get question details
     getQuestionStatus: (questionId: string) => QuestionStatus; // Function to get question status
     flaggedQuestions: string[]; // List of flagged questions
-
-
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({

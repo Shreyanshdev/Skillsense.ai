@@ -135,8 +135,6 @@ export const AiResumeAgent = inngest.createFunction(
     {event: 'AiResumeAgent'},
     async ({ event, step }) => {
         const {recordId, base64ResumeFile , pdfText , aiAgentType , userEmail} = await event.data;
-        
-
         //upload to cloud
         const uplaodFileUrl =await step.run("uploadImage" , async()=>{
             const imageKitFile = await imagekit.upload({
@@ -151,8 +149,6 @@ export const AiResumeAgent = inngest.createFunction(
         const rawContent =aiResumeReport.output[0]?.content;
         const rawContentJson = rawContent.replace('```json','').replace('```','');
         const parseJson =JSON.parse(rawContentJson);
-
-
         //save to db
         const saveToDb = await step.run("SaveToDb", async () => {
           const result = await db.insert(HistoryTable).values({

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import axios from 'axios';
+import api from '@/services/api'; 
 import { toast } from 'react-hot-toast';
 import { BarChart2, BookOpen, Loader2, ExternalLink, Calendar, User, Target, Map as MapIcon } from 'lucide-react';
 
@@ -53,7 +54,7 @@ export default function AiRoadmapDisplay() {
 
     const fetchRoadmap = async () => {
       try {
-        const response = await axios.get(`/api/history?recordId=${roadmapId}`);
+        const response = await api.get(`/history?recordId=${roadmapId}`);
 
         const data = response.data.content; // Assuming content directly holds the AiRoadmapResponse
         setRoadmapData(data);

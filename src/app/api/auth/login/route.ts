@@ -1,78 +1,87 @@
-// src/app/api/login/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/dbconnect'; // For MongoDB
-import User from '@/models/User'; // Your Mongoose User model
+import { connectDB } from '@/lib/dbconnect';
+import User, { IRefreshToken } from '@/models/User';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-
-// --- NEW: Import Drizzle/PostgreSQL related components ---
-import { db } from '@/lib/db'; // Your Drizzle/PostgreSQL DB connection
-import { usersTable as pgUsersTable } from '@/lib/schema'; // Your Drizzle schema for usersTable
-import { eq } from 'drizzle-orm'; // For Drizzle queries (e.g., eq for equality)
-
-
-connectDB(); // Connect to MongoDB
+import { db } from '@/lib/db';
+import { usersTable as pgUsersTable } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
+import { generateAccessToken, generateRefreshToken } from '@/utils/authTokens'; // Import from common file.
 
 export async function POST(request: NextRequest) {
   try {
+    // Ensure DB connection is established per request, good for serverless.
+    await connectDB(); 
+
     const { email, password } = await request.json();
     if (!email || !password) {
+      // All fields are required.
       return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
     }
 
-    // Check if user exists in MongoDB
+    // Find user and select password for comparison.
     const user = await User.findOne({ email }).select('+password');
-
-    if (!user) {
-      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401});
-    }
-
-    // Check if password is correct
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    // Check user existence and password validity.
+    if (!user || !(await bcrypt.compare(password, user.password!))) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
-    // --- NEW LOGIC: Synchronize user to PostgreSQL usersTable ---
-    try {
-      const pgUser = await db.select().from(pgUsersTable).where(eq(pgUsersTable.email, user.email)).limit(1);
-
-      if (pgUser.length === 0) {
-        // User does not exist in PostgreSQL usersTable, insert them
-        await db.insert(pgUsersTable).values({
-          name: user.username || user.email.split('@')[0], // Use username from Mongo or derive from email
-          email: user.email,
-        });
-        console.log(`User ${user.email} synchronized to PostgreSQL usersTable.`);
-      } else {
-        console.log(`User ${user.email} already exists in PostgreSQL usersTable.`);
-        // Optional: Update user details in pgUsersTable if they can change in MongoDB
-        await db.update(pgUsersTable).set({ name: user.username }).where(eq(pgUsersTable.email, user.email));
-      }
-    } catch (pgSyncError) {
-      console.error('PostgreSQL user synchronization error:', pgSyncError);
-      // Decide how to handle this. You might still allow login if DB sync fails,
-      // or return a 500 error, or retry. For now, we'll log it.
-      // It's crucial this doesn't block the login if MongoDB auth succeeded.
+    // PostgreSQL Sync: Check and update/insert user in Drizzle DB.
+    const pgUser = await db.select().from(pgUsersTable).where(eq(pgUsersTable.email, user.email)).limit(1);
+    if (pgUser.length === 0) {
+      // User not in PostgreSQL, insert new entry.
+      await db.insert(pgUsersTable).values({
+        name: user.username || user.email.split('@')[0],
+        email: user.email,
+      });
+    } else {
+      // User found in PostgreSQL, update name if necessary.
+      await db.update(pgUsersTable).set({ name: user.username }).where(eq(pgUsersTable.email, user.email));
     }
-    // --- END NEW LOGIC ---
 
+    // Generate access and refresh tokens.
+    const accessToken = generateAccessToken(user);
+    const { token: refreshToken, jti, expiresAt } = generateRefreshToken(user._id.toString());
 
-    // Generate JWT token (as before)
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, { expiresIn: '2d' });
+    // Store Refresh Token Details in MongoDB.
+    const newRefreshTokenEntry: IRefreshToken = {
+      jti: jti,
+      createdAt: new Date(),
+      expiresAt: expiresAt,
+      invalidated: false,
+    };
 
+    user.refreshTokens.push(newRefreshTokenEntry); // Add to user's refreshTokens array.
+    await user.save(); // Save user document with new refresh token.
+
+    // Prepare response with user info.
     const response = NextResponse.json({
       message: 'Login successful',
       success: true,
-      user: { id: user._id, username: user.username, email: user.email }
-    }, { status: 200 });
+      user: { id: user._id, username: user.username, email: user.email },
+    });
 
-    response.cookies.set('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 7 * 24 * 60 * 60, sameSite: 'strict' });
+    // Set Access Token cookie.
+    response.cookies.set('token', accessToken, {
+      httpOnly: true, // Prevents client-side JS access.
+      secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production.
+      path: '/', // Valid for all paths.
+      maxAge: 15 * 60, // Access token expiry (15 mins).
+      sameSite: 'strict', // CSRF protection.
+    });
+
+    // Set Refresh Token cookie.
+    response.cookies.set('refreshToken', refreshToken, {
+      httpOnly: true, // Prevents client-side JS access.
+      secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production.
+      path: '/', // Valid for all paths.
+      maxAge: 7 * 24 * 60 * 60, // Refresh token expiry (7 days).
+      sameSite: 'strict', // CSRF protection.
+    });
+
     return response;
-
   } catch (error) {
-    console.error('Login error:', error);
+    // For backend routes, consider a dedicated logging service instead of console.error in production.
+    // E.g., a logging library would capture 'Login error:', error details here.
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }

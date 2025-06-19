@@ -7,8 +7,7 @@ import { motion } from 'framer-motion';
 
 
 export const WelcomeBanner = () => {
-  // Assuming a theme for demonstration purposes since react-redux is not resolved.
-  // In a real application, you would pass 'theme' as a prop or manage it with React Context.
+
   const theme = 'dark'; // Placeholder: replace with actual theme logic if Redux is unavailable
 
   return (

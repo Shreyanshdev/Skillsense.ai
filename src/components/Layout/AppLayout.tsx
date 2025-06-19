@@ -9,7 +9,7 @@ import Sidebar from '@/components/Sidebar/Sidebar';
 import GlobalBackground from '@/components/Landing/GlobalBackground';
 import { FiMenu } from 'react-icons/fi';
 import React from 'react';
-
+import api from '@/services/api'; // Adjust path if needed
 // Separate Bubbles component - Remains the same
 const Bubbles = ({ theme }: { theme: string }) => {
     const bubbles = useMemo(
@@ -66,21 +66,14 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch('/api/user-info', {
-          credentials: 'include' // Important for sending httpOnly cookie
-        });
-        if (response.ok) {
-          const data: UserAuthInfo = await response.json();
-          setUserAuthInfo(data);
-        } else {
+        const response = await api.get<UserAuthInfo>('/user-info');
+          setUserAuthInfo(response.data);
+        } catch (error: any) {
           // Handle unauthenticated case, e.g., redirect to login
-          console.error('Failed to fetch user info:', response.statusText);
+          console.error('Error fetching user info:', error);
           // Optional: if not authenticated, redirect to login
           // window.location.href = '/login';
-        }
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      } finally {
+        }finally {
         setLoadingUser(false);
       }
     };

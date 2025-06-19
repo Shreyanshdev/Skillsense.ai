@@ -7,9 +7,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store'; // Import RootState
 import AIOrb from './OrbitalHeroSection'; // Ensure this path is correct
 import { Sparkles, Zap } from 'lucide-react';
-import GlobalBackground from './GlobalBackground'; // Import the new GlobalBackground component
 import dynamic from 'next/dynamic';
-import FeaturesSection from './FeaturesSection'; // Import the FeaturesSection component
+
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -29,7 +28,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
 
   return (
     <section ref={heroRef} className="relative overflow-hidden min-h-screen  items-center justify-center">
-      {/* Render the GlobalBackground component and pass the isDark prop */}
       
       <NoSSR_Bubbles isDark={isDark} />
 

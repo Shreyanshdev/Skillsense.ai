@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
   try {
     // Send to owner
     await transporter.sendMail({
-      from: `"${email}" <${process.env.MAIL_USER}>`,
-      to: 'vasuzx890@gmail.com',
+      from: `"New Subscriber Notification" <${process.env.MAIL_USER}>`,
+      to:  `<${process.env.MAIL_USER}>`,
       subject: `New Newsletter Subscription from ${email}`,
       html: `
         <p>You have a new newsletter subscriber!</p>

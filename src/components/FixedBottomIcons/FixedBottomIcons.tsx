@@ -1,7 +1,6 @@
 // src/components/FixedBottomIcons/FixedBottomIcons.tsx
 
 'use client'; // Needs client-side features
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';

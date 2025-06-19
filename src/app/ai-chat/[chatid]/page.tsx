@@ -4,25 +4,20 @@
 import EmptyState from '@/components/AIChat/emptyState';
 import { Input } from '@/components/AIChat/input';
 import AppLayout from '@/components/Layout/AppLayout';
-import React, { useState, useEffect, useRef, useLayoutEffect, useCallback, HTMLAttributes } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { FiSend } from 'react-icons/fi';
 import { BsStars } from "react-icons/bs";
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import axios from 'axios';
-import Markdown, { Components } from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { materialDark, materialLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';1
 import { v4 as uuidv4 } from 'uuid';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Volume2,  History as HistoryIcon, X, PlusCircle, ChevronsDown } from 'lucide-react';
+import { Mic, Volume2,  History as HistoryIcon, X, PlusCircle, ChevronsDown, VolumeX } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
-import JSONPretty from 'react-json-pretty';
 import 'react-json-pretty/themes/monikai.css';
-import { Node } from 'unist';
 import { ChatMessage } from '@/components/AIChat/MarkdownComponents';
+import api from '@/services/api';
 
 
 // --- Type Definitions ---
@@ -58,8 +53,11 @@ function ChatPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollableChatContainerRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const currentUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const currentAudioInstanceRef = useRef<HTMLAudioElement | null>(null);
@@ -142,7 +140,7 @@ function ChatPage() {
   const GetMessageList = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await axios.get('/api/history?recordId=' + chatid);
+      const result = await api.get('/history?recordId=' + chatid);
       // Explicitly cast result.data to HistoryRecord to access its properties
       const historyData = result.data as HistoryRecord; // <-- Type assertion here
       if ('content' in historyData && Array.isArray(historyData.content) && historyData.content.length > 0) {
@@ -174,7 +172,7 @@ function ChatPage() {
 
   const fetchChatHistoryList = useCallback(async () => {
     try {
-        const response = await axios.get<HistoryRecord[]>('/api/history');
+        const response = await api.get<HistoryRecord[]>('/history');
         //1. Filter history records where aiAgentType is '/ai-chat' and sort it like today history will be on top
         const filteredHistory = response.data.filter(record => record.aiAgentType === '/ai-chat')
                                               .sort((a, b) =>
@@ -236,6 +234,7 @@ function ChatPage() {
     }
   }, [messageList, chatid, updateMessageList]);
 
+  //New chat logic -> generate new uuid -> save it in history and setmesssage on every call in databse
   const onNewChat = async () => {
     const newRecordId = uuidv4();
     try {
@@ -252,78 +251,123 @@ function ChatPage() {
     }
   };
 
+  //speech to text for userInput (It is webbased simple for now)
   const startRecording = async () => {
-    if (!navigator.mediaDevices) {
-      toast.error('Microphone not supported in this browser.');
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast.error('Speech Recognition is not supported in this browser. Please use Chrome/Edge for best results.');
       return;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      audioChunksRef.current = [];
+      // Initialize Web Speech API
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true; // Keep listening
+      recognition.interimResults = true; // Show results as they are being recognized
+      recognition.lang = 'en-US'; // Or dynamically set based on user's locale
 
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        // we can update a separate state for interim results to show live typing feedback
+        if (finalTranscript) {
+          setUserInput(prevInput => prevInput + finalTranscript + ' '); // Append new final results
+        }
       };
-
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        console.log('Audio recorded:', audioBlob);
-        toast('Processing audio...');
-        // This is a simulated response. In a real app, you'd send audioBlob to an API for transcription.
-        setUserInput('This is a simulated voice input for testing purposes.');
-        audioChunksRef.current = [];
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        toast.error(`Speech recognition error: ${event.error}. Please ensure microphone access is granted.`);
+        setIsRecording(false);
       };
-
-      mediaRecorderRef.current.start();
+      recognition.onend = () => {
+        console.log('Speech recognition service disconnected.');
+        setIsRecording(false);
+      };
+      recognitionRef.current = recognition; // Store recognition object in ref
+      recognition.start();
       setIsRecording(true);
-      toast('Recording started...');
+      toast('Recording started... Speak now!');
     } catch (err) {
-      console.error('Error accessing microphone:', err);
-      toast.error('Error accessing microphone. Please allow access.');
+      console.error('Error accessing microphone for Web Speech API:', err);
+      toast.error('Error accessing microphone. Please allow access for speech recognition.');
     }
   };
-
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
       setIsRecording(false);
       toast('Recording stopped.');
     }
   };
 
-  const speakText = useCallback(async (text: string) => {
-    if (currentAudioInstanceRef.current) {
-        currentAudioInstanceRef.current.pause();
-        currentAudioInstanceRef.current.currentTime = 0;
-        currentAudioInstanceRef.current = null;
+  // Function to handle speaking or stopping designed for speaking Ai output
+  const toggleSpeech = (text: string) => {
+    if (!text || text.trim() === '') {
+      toast.error('No text to speak.');
+      return;
     }
-
-    try {
-        toast('Generating speech...');
-        const response = await axios.post('/api/text-to-speech', { text }, { responseType: 'blob' });
-        const audioBlob = new Blob([response.data as ArrayBuffer], { type: 'audio/mpeg' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-
-        currentAudioInstanceRef.current = audio;
-
-        audio.play().catch(e => {
-            console.error('Audio playback failed:', e);
-            toast.error('Failed to play audio. Your browser might block autoplay.');
-        });
-        audio.onended = () => {
-            URL.revokeObjectURL(audioUrl);
-            currentAudioInstanceRef.current = null;
-        };
-        toast.success('Playing response.');
-
-    } catch (error) {
-        console.error('Error during text-to-speech:', error);
-        toast.error('Failed to convert text to speech.');
+    if (!('speechSynthesis' in window)) {
+      toast.error('Text-to-speech not supported in this browser.');
+      return;
     }
-  }, []);
+    // Check if the *current* utterance being spoken is the one we want to stop
+    // Or if any speech is active and we just want to cancel
+    if (isSpeaking && currentUtteranceRef.current?.text === text) {
+      console.log('Stopping speech...');
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      currentUtteranceRef.current = null;
+    } else {
+      // Cancel any *other* ongoing speech before starting new
+      window.speechSynthesis.cancel();
+      console.log('Starting speech...');
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.onstart = () => {
+        console.log('Speech started for:', text);
+        setIsSpeaking(true);
+      };
+      utterance.onend = () => {
+        console.log('Speech ended for:', text);
+        setIsSpeaking(false);
+        currentUtteranceRef.current = null;
+      };
+      utterance.onerror = (event) => {
+        console.error('Speech error:', event.error, 'for text:', text);
+        // Only show a toast if the error is NOT 'interrupted'
+        if (event.error !== 'interrupted') {
+            toast.error(`Text-to-speech error: ${event.error}.`);
+        } else {
+            // Optionally log or handle 'interrupted' specifically if needed
+            console.log('Speech was intentionally interrupted.');
+        }
+        setIsSpeaking(false);
+        currentUtteranceRef.current = null;
+    };
+      window.speechSynthesis.speak(utterance);
+      currentUtteranceRef.current = utterance; // Store the current utterance
+    }
+  };
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis && isSpeaking) {
+        window.speechSynthesis.cancel();
+        console.log('Speech cancelled on component unmount.');
+      }
+    };
+  }, [isSpeaking]);
 
+
+  //styles for chat interface
   const isDark = theme === 'dark';
   const chatAreaBgClass = isDark
   ? "bg-gray-900/40 backdrop-blur-lg"
@@ -353,7 +397,6 @@ function ChatPage() {
 
   return (
     <AppLayout>
-      <Toaster position="top-center" reverseOrder={false} />
       <div className={`flex h-full w-full ${chatAreaBgClass} transition-colors duration-300 font-sans relative -mb-9`}>
         {/* New Chat Button - Fixed Top-Left */}
         <motion.button
@@ -425,14 +468,20 @@ function ChatPage() {
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
-                                        onClick={() => speakText(message.content)}
+                                        onClick={() => toggleSpeech(message.content)}
                                         className={`ml-2 p-2 rounded-full transition-all duration-200
                                         ${isDark ? `bg-gray-700/70 hover:bg-gray-600/70 hover:${inputShadowClass} hover:${inputFocusEffect} text-gray-300` 
                                                 : `bg-gray-200/70 hover:bg-gray-300/70 text-gray-700 hover:${inputShadowClass} hover:${inputFocusEffect}`}
                                         flex-shrink-0 self-baseline-last cursor-pointer`}
                                         aria-label="Listen to response"
-                                    >
-                                        <Volume2 size={20} />
+                                    >{isSpeaking && currentUtteranceRef.current?.text === message.content ? (
+                                      // You can use an icon here, e.g., <FaStop /> if you have react-icons
+                                      <VolumeX size={20} />
+                                    ) : (
+                                      // You can use an icon here, e.g., <FaVolumeUp />
+                                      <Volume2 size={20} />
+                                    )}
+                                        
                                     </motion.button>
                                 )}
                             </motion.div>

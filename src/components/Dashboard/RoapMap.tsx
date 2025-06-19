@@ -6,6 +6,7 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import axios from 'axios';
+import api from '@/services/api';
 import { v4 as uuidv4 } from 'uuid';
 import { Loader2, X, Map, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -74,7 +75,7 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
     const roadmapId = uuidv4();
 
     try {
-      const result = await axios.post('/api/ai-roadmap-agent', {
+      const result = await api.post('/ai-roadmap-agent', {
         roadmapId: roadmapId,
         userInput: userInput,
         // NEW: Include timeDuration in the payload

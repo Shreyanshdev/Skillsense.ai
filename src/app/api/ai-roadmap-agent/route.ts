@@ -1,5 +1,4 @@
 import { inngest } from "@/inngest/client";
-
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 import { getMongoUserEmailFromRequest } from '@/utils/auth';

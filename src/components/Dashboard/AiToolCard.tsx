@@ -1,16 +1,16 @@
-// src/components/Dashboard/AiToolCard.tsx
 'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { motion, useMotionValue, useTransform } from 'framer-motion'; // Added useMotionValue, useTransform
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { FiArrowRight } from 'react-icons/fi';
+import { FaSpinner } from 'react-icons/fa'; // Import FaSpinner
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import axios from 'axios';
+import api from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-import { ResumeUploadDialog } from '@/components/Dashboard/ResumeUpload'; // Assuming this is correct path to the dialog
+import { ResumeUploadDialog } from '@/components/Dashboard/ResumeUpload';
 import { RoadmapGenerateDialog } from './RoapMap';
 
 interface AiToolCardProps {
@@ -33,6 +33,7 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isRoadmapDialogOpen, setIsRoadmapDialogOpen] = useState(false);
   const [generatedRecordId, setGeneratedRecordId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
 
   // Motion values for subtle mouse interaction
   const x = useMotionValue(0);
@@ -41,34 +42,37 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
   const rotateY = useTransform(x, [-100, 100], [-10, 10]);
 
   // Theme-based colors for the card
-  const cardBgClass = isDark ? 'bg-gray-800/80' : 'bg-white/80'; // Slightly more transparent
+  const cardBgClass = isDark ? 'bg-gray-800/80' : 'bg-white/80';
   const cardHoverBgClass = isDark ? 'hover:bg-gray-700/90' : 'hover:bg-white/90';
   const cardBorderClass = isDark ? 'border-gray-700' : 'border-gray-200';
   const textColorPrimary = isDark ? 'text-white' : 'text-gray-900';
   const textColorSecondary = isDark ? 'text-gray-300' : 'text-gray-600';
-  const iconBgClass = isDark ? 'bg-sky-900/50 text-sky-300' : 'bg-sky-100 text-sky-700'; // Slightly more prominent icon background
+  const iconBgClass = isDark ? 'bg-sky-900/50 text-sky-300' : 'bg-sky-100 text-sky-700';
   const primaryButtonGradient = 'bg-gradient-to-r from-sky-500 to-blue-600';
-  const primaryButtonShadow = 'shadow-lg hover:shadow-blue-500/50'; // More intense blue shadow on hover
+  const primaryButtonShadow = 'shadow-lg hover:shadow-blue-500/50';
 
-  // New: Futuristic glowing border
+  // Futuristic glowing border
   const borderGradient = isDark
-    ? 'border-transparent group-hover:border-blue-400 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]' // Blue glow
-    : 'border-transparent group-hover:border-violet-400 group-hover:shadow-[0_0_15px_rgba(139,92,246,0.5)]'; // Violet glow
+    ? 'border-transparent group-hover:border-blue-400 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]'
+    : 'border-transparent group-hover:border-violet-400 group-hover:shadow-[0_0_15px_rgba(139,92,246,0.5)]';
 
   const onClickButton = async () => {
+    // Handle dialogs first, as they manage their own loading within their component
     if (tool.path === '/ai-resume-analyzer') {
       setIsUploadDialogOpen(true);
       return;
     }
-    if(tool.path === '/ai-roadmap-generator') {
+    if (tool.path === '/ai-roadmap-generator') {
       setIsRoadmapDialogOpen(true);
       return;
     }
 
+    // Only set loading for direct API calls (e.g., AI-chat)
+    setIsLoading(true); // Start loading
 
     const newRecordId = uuidv4();
     try {
-      const result = await axios.post('/api/history', {
+      const result = await api.post('/history', {
         recordId: newRecordId,
         content: [],
         aiAgentType: tool.path,
@@ -77,19 +81,24 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
       router.push(tool.path + "/" + newRecordId);
     } catch (error) {
       console.error("Error creating initial history record or navigating:", error);
+      // Optionally show a user-friendly error message here
+    } finally {
+      setIsLoading(false); // Stop loading regardless of success or failure
     }
   };
 
   const handleAnalysisSuccess = (recordId: string) => {
     setGeneratedRecordId(recordId);
     setIsUploadDialogOpen(false);
+    // No need for setIsLoading(false) here, as this function is called after dialog's internal logic
     router.push(`${tool.path}/${recordId}`);
   };
 
   const handleRoadmapGenerationSuccess = (roadmapId: string) => {
     setGeneratedRecordId(roadmapId);
     setIsRoadmapDialogOpen(false);
-    router.push(`/ai-roadmap-generator/${roadmapId}`); // Navigate to the generated roadmap page
+    // No need for setIsLoading(false) here, as this function is called after dialog's internal logic
+    router.push(`/ai-roadmap-generator/${roadmapId}`);
   };
 
   // Handle mouse movement for parallax effect
@@ -113,23 +122,22 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
         whileHover={{
           scale: 1.03,
           boxShadow: isDark ? '0 12px 24px rgba(0,0,0,0.6)' : '0 12px 24px rgba(0,0,0,0.2)',
-          rotateX: 0, // Reset these during initial hover to allow dynamic later
+          rotateX: 0,
           rotateY: 0,
         }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        style={{ perspective: 1000, rotateX, rotateY }} // Apply perspective for 3D effect
+        style={{ perspective: 1000, rotateX, rotateY }}
         className={`group flex flex-col p-6 rounded-2xl transition-all duration-300 ease-out border ${cardBorderClass} ${cardBgClass} ${cardHoverBgClass} h-full overflow-hidden relative
-                    ${borderGradient}`} // Add group for hover effect on children, and the glowing border
+                    ${borderGradient}`}
       >
-        {/* Subtle background glow/animation on hover */}
         <motion.div
           className={`absolute inset-0 z-0 rounded-2xl transition-opacity duration-300
             ${isDark ? 'bg-gradient-to-br from-blue-900/10 via-purple-900/10 to-transparent' : 'bg-gradient-to-br from-blue-100/10 via-purple-100/10 to-transparent'}
           `}
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
-          style={{ x, y }} // Background also reacts to mouse for depth
+          style={{ x, y }}
         />
 
         <div className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-lg mb-4 ${iconBgClass}`}>
@@ -146,14 +154,24 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
         <motion.button
           whileHover={{
             scale: 1.05,
-            boxShadow: isDark ? '0 0 15px rgba(59,130,246,0.6)' : '0 0 15px rgba(139,92,246,0.6)', // Button specific glow
+            boxShadow: isDark ? '0 0 15px rgba(59,130,246,0.6)' : '0 0 15px rgba(139,92,246,0.6)',
           }}
           whileTap={{ scale: 0.95 }}
           className={`relative z-10 inline-flex items-center justify-center gap-x-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-all duration-300 ease-out cursor-pointer
-                     ${primaryButtonGradient} ${primaryButtonShadow}`}
+                     ${primaryButtonGradient} ${primaryButtonShadow} ${isLoading ? 'pointer-events-none opacity-70' : ''}`} // Disable button while loading
           onClick={onClickButton}
+          disabled={isLoading} // Disable button to prevent multiple clicks
         >
-          {tool.buttonText} <FiArrowRight className="w-4 h-4" />
+          {isLoading ? (
+            <>
+              <FaSpinner className={`animate-spin ${isDark ? 'text-blue-200' : 'text-blue-200'}`} /> {/* Adjust size/color if needed */}
+              Loading...
+            </>
+          ) : (
+            <>
+              {tool.buttonText} <FiArrowRight className="w-4 h-4" />
+            </>
+          )}
         </motion.button>
       </motion.div>
 
@@ -164,10 +182,10 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
       />
 
       <RoadmapGenerateDialog
-      isOpen={isRoadmapDialogOpen}
-      onClose={() => setIsRoadmapDialogOpen(false)}
-      onGenerateSuccess={handleRoadmapGenerationSuccess}
-    />
+        isOpen={isRoadmapDialogOpen}
+        onClose={() => setIsRoadmapDialogOpen(false)}
+        onGenerateSuccess={handleRoadmapGenerationSuccess}
+      />
     </>
   );
 };
