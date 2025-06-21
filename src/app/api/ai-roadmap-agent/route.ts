@@ -6,7 +6,6 @@ import { getMongoUserEmailFromRequest } from '@/utils/auth';
 
 export async function POST(req: NextRequest) {
     const {roadmapId , userInput , timeDuration} = await req.json();
-    console.log(" /api/ai-chat hit"); // <— debug line
     const user = await getMongoUserEmailFromRequest(req);
     
     // Dispatch to Inngest
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
     async function getRuns(runId: string) {
     const url = `${process.env.INNGEST_SERVER_HOST}/v1/events/${runId}/runs`;
     const resp = await axios.get(url, {
-        headers: { Authorization: `Bearer ${process.env.INNGEST_API_KEY}` },
+        headers: { Authorization: `Bearer ${process.env.INNGEST_SIGNING_KEY}` },
     });
     return resp.data;
     }

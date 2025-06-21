@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
 import User from '@/models/User';
 
 export const generateAndStoreToken = async (

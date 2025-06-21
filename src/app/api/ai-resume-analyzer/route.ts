@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 async function getRuns(runId: string) {
   const url = `${process.env.INNGEST_SERVER_HOST}/v1/events/${runId}/runs`;
   const resp = await axios.get(url, {
-    headers: { Authorization: `Bearer ${process.env.INNGEST_API_KEY}` },
+    headers: { Authorization: `Bearer ${process.env.INNGEST_SIGNING_KEY}` },
   });
   // resp.data should be your { data: [ ... ] }
   return resp.data;

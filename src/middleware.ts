@@ -1,28 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Define routes that require authentication via middleware (e.g., /evaluation)
-// '/dashboard' should still implicitly be handled here if it's protected by the presence of a token,
-// or if you want to explicitly check it at the middleware level too.
-// For now, based on your comment, let's assume it might have public elements or
-// its auth is handled in the page component more, but the middleware should still
-// check for login status to redirect away from /login if token is present.
+
 const PROTECTED_ROUTES = ['/evaluation', '/dashboard']; // Added /dashboard here for middleware protection
 
-// Define routes that are typically for authentication purposes (login, signup)
-// and should redirect if a user is already logged in.
+
 const AUTH_PAGES = ['/login', '/signup'];
 
 export function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   console.log(`[Middleware] Incoming request for: ${url.pathname}`);
 
-  // --- Step 1: Exclude specific API routes and static assets from all auth logic ---
-  // These paths should bypass middleware authentication checks entirely.
-  // CRITICAL: Ensure /api/auth/* are excluded as they manage tokens or user state.
   const EXCLUDED_PREFIXES = [
     '/api/ai-chat',
     '/api/inngest',
-    // All /api/auth routes are essential for authentication flow and should be excluded
     '/api/auth/', // Matches /api/auth/login, /api/auth/register, /api/auth/refresh-token, /api/auth/google, etc.
     '/api/logout', // This is also often part of auth flow, so keeping it explicitly excluded
     '/_next/static/',     // Next.js static files (JS, CSS, images)

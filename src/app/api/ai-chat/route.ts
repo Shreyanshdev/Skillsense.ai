@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     },
     ...textMessages.map((msg) => ({
       role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: String(msg.content) }], // ✅ ensure it's a string
+      parts: [{ text: String(msg.content) }], 
     })),
   ];
 

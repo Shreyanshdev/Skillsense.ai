@@ -8,9 +8,6 @@ import { evaluateTestFunction } from "@/inngest/test-evaluation";
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
-    /* your functions will be passed here later! */
-    
-    //AiCareerAgent,
     AiResumeAgent,
     evaluateTestFunction,
     AiRoadmapAgent

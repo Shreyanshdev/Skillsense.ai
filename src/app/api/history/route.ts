@@ -8,29 +8,23 @@ import { connectDB } from '@/lib/dbconnect'; // Your MongoDB connection utility
 import { eq } from 'drizzle-orm';
 import { getMongoUserEmailFromRequest } from '@/utils/auth';
 
-// Ensure MongoDB connection is established for this API route
 connectDB(); // Make sure this connects your Mongoose models
 
 
 export async function POST(req : NextRequest) { // Changed 'req : Request' to 'req : NextRequest' for cookie access
     try {
         const {content ,recordId , aiAgentType} = await req.json();
-        // Log received data for debugging
-        console.log("Received recordId:", recordId);
-        console.log("Received content:", content);
 
         // Input validation for recordId and content
-        if (!recordId || content === undefined || content === null) { // Check for content explicitly
-            console.error("Validation Error: Missing recordId or content.");
+        if (!recordId || content === undefined || content === null) { 
             return NextResponse.json({error: "Invalid input: recordId or content missing"}, {status: 400});
         }
 
         // --- Get current user email from your MongoDB authentication ---
-        const userEmail = await getMongoUserEmailFromRequest(req); // Pass NextRequest object
+        const userEmail = await getMongoUserEmailFromRequest(req); 
 
         if (!userEmail) {
             console.error("Authentication Error: User email not available from MongoDB auth.");
-            // Return 401 Unauthorized if authentication is mandatory for this endpoint
             return NextResponse.json({ error: "Authentication required or user email not found" }, { status: 401 });
         }
 
