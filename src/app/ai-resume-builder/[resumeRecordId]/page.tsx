@@ -14,8 +14,6 @@ import TemplateChooser from '@/components/ResumePreview/Templates/TemplateChoose
 import toast from 'react-hot-toast';
 import { useParams } from 'next/navigation';
 
-// Import for PDF generation
-import { usePDF } from 'react-to-pdf'; // <--- NEW IMPORT
 
 
 // Import your section components (ensure all are here as before)
@@ -48,7 +46,6 @@ const ResumeBuilderPage = () => {
   const { currentStep, sections, templateId, resumeData, title: resumeTitle } = useSelector((state: RootState) => state.resume);
   const theme = useSelector((state: RootState) => state.theme.theme);
   const isDark = theme === 'dark';
-  const { toPDF, targetRef } = usePDF({ filename: 'resume.pdf', page: { format: 'A4', orientation: 'portrait' } });
 
   const params = useParams();
   const resumeRecordId = params.resumeRecordId as string;
@@ -111,7 +108,6 @@ const ResumeBuilderPage = () => {
   // --- UPDATED: handleDownloadPdf ---
   const handleDownloadPdf = () => {
 
-      toPDF(); // Call the usePDF hook function
       toast.success("Resume download started!", {
         style: { background: isDark ? '#333' : '#fff', color: isDark ? '#fff' : '#333' },
       });
@@ -374,7 +370,7 @@ const ResumeBuilderPage = () => {
           </section>
 
           {/* --- NEW: Pass ref to ResumePreview --- */}
-          <aside  ref={targetRef} className={`lg:w-1/3 flex-shrink-0 ${sectionBgClass} p-4 md:p-6 rounded-lg shadow-xl ${sectionBorderClass} sticky top-0 lg:h-full overflow-y-auto transition-colors duration-300 hidden lg:block`}>
+          <aside  className={`lg:w-1/3 flex-shrink-0 ${sectionBgClass} p-4 md:p-6 rounded-lg shadow-xl ${sectionBorderClass} sticky top-0 lg:h-full overflow-y-auto transition-colors duration-300 hidden lg:block`}>
             <h2 className={`text-lg font-bold mb-4 ${headerTextColor}`}>Live Preview</h2>
             <ResumePreview />
           </aside>
@@ -423,7 +419,7 @@ const ResumeBuilderPage = () => {
               </div>
               <div className={`flex-grow overflow-y-auto rounded-lg shadow-xl ${sectionBgClass} ${sectionBorderClass} p-4`}>
                 {/* --- NEW: Pass ref for mobile preview as well if you want it to be downloadable --- */}
-                <ResumePreview ref={targetRef} />
+                <ResumePreview />
               </div>
             </motion.div>
           )}
