@@ -4,6 +4,7 @@ import formReducer from './slices/formSlice';
 import loadingReducer from './slices/loadingSlice';
 import testReducer from './slices/testSlice';
 import chatReducer from './slices/chatSlice';
+import resumeReducer from './slices/resumeSlice'
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     loading: loadingReducer,
     test: testReducer,
     chat:chatReducer,
+    resume:resumeReducer,
   },
 });
 

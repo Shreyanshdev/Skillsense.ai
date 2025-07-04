@@ -109,7 +109,6 @@ function ChatPage() {
       // Include last few exchanges (user + assistant), NOT just user
       const trimmedHistory = updatedMessageList.slice(-8); // ideally even 10-12, depending on cost
       
-  
       // In your handleSendMessage()
       const result = await api.post<Message>("/ai-chat", {
           messages: [

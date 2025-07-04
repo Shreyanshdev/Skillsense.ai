@@ -1,4 +1,3 @@
-// src/utils/tokenUtils.ts
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { IUser } from '@/models/User'; // Assuming you have an IUser interface defined in your User model file

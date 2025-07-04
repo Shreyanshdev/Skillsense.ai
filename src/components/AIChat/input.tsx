@@ -9,8 +9,6 @@ const Textarea = React.forwardRef<
   return (
     <textarea
       ref={ref}
-      // Removed fixed border/shadow here to allow parent to define it based on its container
-      // The parent (ChatPage) will wrap this <Input> with a div that has the desired border/shadow/bg
       className={cn(
         "flex w-full text-base bg-transparent transition-colors resize-none overflow-hidden",
         "focus-visible:outline-none focus-visible:ring-0", // No ring here, parent will handle focus visual

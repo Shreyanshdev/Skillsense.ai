@@ -10,7 +10,7 @@ export const generateAndStoreToken = async (
 
   await User.findByIdAndUpdate(userId, {
     [tokenField]: hashedToken,
-    [`${tokenField}Expiry`]: Date.now() + 5 * 60 * 1000, // 5 minutes
+    [`${tokenField}Expiry`]: Date.now() + 5 * 60 *60 * 1000, // 5 minutes
   });
 
   return plainToken; // Return plain token to send in email

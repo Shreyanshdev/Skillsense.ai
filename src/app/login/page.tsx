@@ -111,7 +111,7 @@ export default function LoginPage() {
       // The access token is now in an httpOnly cookie, not in res.data.
       console.log('Login successful. Redirecting to dashboard...');
       // localStorage.setItem('token', data.token); // REMOVED: Token is httpOnly
-      router.replace('/dashboard');
+      router.replace('/ai-tools');
 
     } catch (error: any) {
       // Axios throws an error for non-2xx responses (like 401, 500)

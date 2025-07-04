@@ -17,7 +17,8 @@ import {
   FiMoon, FiSun,  // Theme toggle
   FiChevronLeft,  // Collapse sidebar
   FiChevronRight, // Expand sidebar
-  FiX             // Mobile close button
+  FiX,             // Mobile close button
+  FiBox
 } from 'react-icons/fi';
 import { useState, useEffect, useCallback } from 'react';
 import React from 'react';
@@ -36,10 +37,12 @@ interface SidebarProps {
 }
 
 const sidebarItems = [
-  { id: 'dashboard', name: 'Dashboard', icon: <FiHome /> },
+  { id: 'dashboard', name: 'Dashboard', icon: <FiHome /> }, // Name change krna hai
+  { id: 'ai-tools', name: 'Ai-Tools', icon: <FiBox /> },
   { id: 'evaluation', name: 'Evaluation', icon: <FiBarChart2 /> },
-  { id: 'goals', name: 'Goal Tracker', icon: <FiTarget /> },
+  { id: 'goal-tracker', name: 'Goal Tracker', icon: <FiTarget /> },
   { id: 'billing', name: 'Billing', icon: <FiCreditCard /> },
+  { id: 'profile', name: 'Profile', icon: <FiUser /> },
 ];
 
 const skillsenseTextVariants : Variants = {

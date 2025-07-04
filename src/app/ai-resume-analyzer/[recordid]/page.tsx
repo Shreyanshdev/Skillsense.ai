@@ -7,8 +7,8 @@ import AppLayout from '@/components/Layout/AppLayout';
 import ResumeAnalyzer from '@/components/AiResume/Report';
 
 interface ResumeAnalyzerRecordData {
-  metadeta?: string; // Assuming 'metadeta' (should be 'metadata'?) is a string for the PDF URL
-  content?: any;    // 'content' can be whatever structure your AI report has,
+  metadeta?: string; 
+  content?: any;    
 }
 function AiResumeAnalyzer() {
   const {recordid} = useParams();

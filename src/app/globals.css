@@ -299,6 +299,14 @@ body {
     0 0 30px rgba(59, 130, 246, 0.1); /* Blue-500 subtle glow */
 }
 
+.tiptap-editor-wrapper .ProseMirror.is-empty::before {
+  content: attr(data-placeholder);
+  color: #888888;
+  float: left;
+  pointer-events: none;
+  height: 0;
+}
+
 /* Grid Pattern Background for Left Panel (now on transparent background) */
 .bg-grid-pattern-dark {
   background-image: linear-gradient(to right, rgba(55, 65, 81, 0.2) 1px, transparent 1px),
@@ -342,4 +350,61 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* globals.css or module.scss */
+/* General toolbar styling */
+.rsw-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #ccc;
+  background-color: #f1f1f1;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.dark .rsw-toolbar {
+  background-color: #1f2937; /* Tailwind gray-800 */
+  border-color: #374151;     /* Tailwind gray-700 */
+}
+
+/* Button style */
+.rsw-toolbar button {
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  color: #111827; /* gray-900 */
+  font-weight: 500;
+  font-size: 0.875rem;
+  background-color: transparent;
+  border: none;
+}
+
+.dark .rsw-toolbar button {
+  color: #e5e7eb; /* gray-200 */
+}
+
+/* Hover effect */
+.rsw-toolbar button:hover {
+  background-color: #f87171; /* red-400 */
+  color: white;
+}
+
+.dark .rsw-toolbar button:hover {
+  background-color: #ef4444; /* red-500 */
+  color: white;
+}
+
+/* Active (selected) button effect */
+.rsw-toolbar button:active,
+.rsw-toolbar button.rsw-active {
+  background-color: #dc2626 !important; /* red-600 */
+  color: white;
+}
+
+.rsw-toolbar {
+  overflow-x: auto;
+  flex-wrap: nowrap;
 }

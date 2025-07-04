@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
@@ -67,7 +66,11 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
       return;
     }
 
-    // Only set loading for direct API calls (e.g., AI-chat)
+    if(tool.path === '/my-resumes'){
+      router.push('/my-resumes');
+      return;
+    }
+
     setIsLoading(true); // Start loading
 
     const newRecordId = uuidv4();
@@ -90,14 +93,12 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
   const handleAnalysisSuccess = (recordId: string) => {
     setGeneratedRecordId(recordId);
     setIsUploadDialogOpen(false);
-    // No need for setIsLoading(false) here, as this function is called after dialog's internal logic
     router.push(`${tool.path}/${recordId}`);
   };
 
   const handleRoadmapGenerationSuccess = (roadmapId: string) => {
     setGeneratedRecordId(roadmapId);
     setIsRoadmapDialogOpen(false);
-    // No need for setIsLoading(false) here, as this function is called after dialog's internal logic
     router.push(`/ai-roadmap-generator/${roadmapId}`);
   };
 
@@ -121,50 +122,62 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
         transition={{ duration: 0.5 }}
         whileHover={{
           scale: 1.03,
-          boxShadow: isDark ? '0 12px 24px rgba(0,0,0,0.6)' : '0 12px 24px rgba(0,0,0,0.2)',
-          rotateX: 0,
-          rotateY: 0,
+          boxShadow: isDark
+            ? '0 12px 24px rgba(0,0,0,0.6)'
+            : '0 12px 24px rgba(0,0,0,0.2)',
         }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ perspective: 1000, rotateX, rotateY }}
-        className={`group flex flex-col p-6 rounded-2xl transition-all duration-300 ease-out border ${cardBorderClass} ${cardBgClass} ${cardHoverBgClass} h-full overflow-hidden relative
-                    ${borderGradient}`}
+        className={`group flex flex-col p-6 sm:p-5 rounded-2xl transition-all duration-300 ease-out border
+                    ${cardBorderClass} ${cardBgClass} ${cardHoverBgClass} h-full overflow-hidden relative ${borderGradient}`}
       >
+        {/* Gradient Layer */}
         <motion.div
-          className={`absolute inset-0 z-0 rounded-2xl transition-opacity duration-300
-            ${isDark ? 'bg-gradient-to-br from-blue-900/10 via-purple-900/10 to-transparent' : 'bg-gradient-to-br from-blue-100/10 via-purple-100/10 to-transparent'}
-          `}
+          className={`absolute inset-0 z-0 rounded-2xl transition-opacity duration-300 ${
+            isDark
+              ? 'bg-gradient-to-br from-blue-900/10 via-purple-900/10 to-transparent'
+              : 'bg-gradient-to-br from-blue-100/10 via-purple-100/10 to-transparent'
+          }`}
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
           style={{ x, y }}
         />
-
+  
+        {/* Icon */}
         <div className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-lg mb-4 ${iconBgClass}`}>
           <Image src={tool.icon} alt={tool.name} width={28} height={28} />
         </div>
-
+  
+        {/* Title */}
         <h2 className={`relative z-10 text-xl font-semibold mb-2 ${textColorPrimary}`}>
           {tool.name}
         </h2>
-        <p className={`relative z-10 text-base mb-4 flex-1 ${textColorSecondary}`}>
+  
+        {/* Description */}
+        <p className={`relative z-10 text-sm sm:text-base mb-4 flex-1 ${textColorSecondary}`}>
           {tool.desc}
         </p>
-
+  
+        {/* Action Button */}
         <motion.button
           whileHover={{
             scale: 1.05,
-            boxShadow: isDark ? '0 0 15px rgba(59,130,246,0.6)' : '0 0 15px rgba(139,92,246,0.6)',
+            boxShadow: isDark
+              ? '0 0 15px rgba(59,130,246,0.6)'
+              : '0 0 15px rgba(139,92,246,0.6)',
           }}
           whileTap={{ scale: 0.95 }}
           className={`relative z-10 inline-flex items-center justify-center gap-x-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-all duration-300 ease-out cursor-pointer
-                     ${primaryButtonGradient} ${primaryButtonShadow} ${isLoading ? 'pointer-events-none opacity-70' : ''}`} // Disable button while loading
+                     ${primaryButtonGradient} ${primaryButtonShadow} ${
+            isLoading ? 'pointer-events-none opacity-70' : ''
+          }`}
           onClick={onClickButton}
-          disabled={isLoading} // Disable button to prevent multiple clicks
+          disabled={isLoading}
         >
           {isLoading ? (
             <>
-              <FaSpinner className={`animate-spin ${isDark ? 'text-blue-200' : 'text-blue-200'}`} /> {/* Adjust size/color if needed */}
+              <FaSpinner className="animate-spin text-blue-200" />
               Loading...
             </>
           ) : (
@@ -174,13 +187,14 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
           )}
         </motion.button>
       </motion.div>
-
+  
+      {/* Dialogs */}
       <ResumeUploadDialog
         isOpen={isUploadDialogOpen}
         onClose={() => setIsUploadDialogOpen(false)}
         onAnalyzeSuccess={handleAnalysisSuccess}
       />
-
+  
       <RoadmapGenerateDialog
         isOpen={isRoadmapDialogOpen}
         onClose={() => setIsRoadmapDialogOpen(false)}
@@ -188,4 +202,5 @@ export const AiToolCard = ({ tool }: AiToolProps) => {
       />
     </>
   );
+  
 };

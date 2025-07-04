@@ -106,166 +106,137 @@ export default function AiRoadmapDisplay() {
   const { textRoadmap, flowRoadmap } = roadmapData;
 
   return (
-    <div className={`min-h-[calc(100vh-80px)] ${containerBgClass} p-4 sm:p-6 lg:p-8 transition-colors duration-300`}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`max-w-6xl mx-auto p-6 rounded-2xl shadow-xl ${cardBgClass} backdrop-blur-lg`}
-        style={{
-          boxShadow: isDark ? '0 8px 32px 0 rgba(31, 38, 135, 0.37)' : '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        <h1 className={`text-4xl font-extrabold mb-4 text-center ${textColorClass} drop-shadow-lg`}>
-          {flowRoadmap.roadmapTitle || "Your Career Roadmap"}
-        </h1>
-        <p className={`text-center mb-8 ${subTextColorClass} max-w-2xl mx-auto`}>
-          {flowRoadmap.description || "Here's a personalized plan to guide your career journey."}
-        </p>
+  <div className={`min-h-screen ${containerBgClass} p-4 sm:p-6 lg:p-8 transition-colors duration-300`}>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className={`max-w-6xl mx-auto p-6 rounded-3xl shadow-2xl ${cardBgClass} backdrop-blur-xl`}
+    >
+      <h1 className={`text-3xl md:text-4xl font-bold mb-3 text-center ${textColorClass}`}>
+        {flowRoadmap.roadmapTitle || 'Career Roadmap'}
+      </h1>
+      <p className={`text-sm md:text-base text-center mb-6 ${subTextColorClass}`}>{flowRoadmap.description || 'Your personalized learning journey.'}</p>
 
-        {/* Tab Navigation */}
-        <div className={`flex justify-center mb-8 border-b ${borderColorClass}`}>
-          <button
-            onClick={() => setActiveTab('text')}
-            className={`py-3 px-6 text-lg font-semibold rounded-t-lg transition-all duration-300 flex items-center gap-2
-                        ${activeTab === 'text' ? activeTabClass : inactiveTabClass}`}
+      <div className={`flex justify-center mb-6 border-b ${borderColorClass}`}>
+        <button
+          onClick={() => setActiveTab('text')}
+          className={`py-2 px-5 text-sm md:text-base font-medium rounded-t-lg transition-all duration-300 flex items-center gap-2 ${activeTab === 'text' ? activeTabClass : inactiveTabClass}`}
+        >
+          <BookOpen size={18} /> Text View
+        </button>
+        <button
+          onClick={() => setActiveTab('flow')}
+          className={`py-2 px-5 text-sm md:text-base font-medium rounded-t-lg transition-all duration-300 flex items-center gap-2 ${activeTab === 'flow' ? activeTabClass : inactiveTabClass}`}
+        >
+          <BarChart2 size={18} /> Visual Flow
+        </button>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {activeTab === 'text' && (
+          <motion.div
+            key="text-roadmap"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="text-roadmap-content"
           >
-            <BookOpen size={20} /> Textual View
-          </button>
-          <button
-            onClick={() => setActiveTab('flow')}
-            className={`py-3 px-6 text-lg font-semibold rounded-t-lg transition-all duration-300 flex items-center gap-2
-                        ${activeTab === 'flow' ? activeTabClass : inactiveTabClass}`}
+            <section className={`mb-6 p-5 rounded-xl ${cardBgClass} border ${borderColorClass}`}>
+              <h2 className={`text-xl font-semibold mb-3 ${textColorClass} flex items-center gap-2`}>
+                <User size={20} className="text-orange-500" /> Profile
+              </h2>
+              <p className={`${subTextColorClass} text-sm mb-1`}><strong className={textColorClass}>Skills:</strong> {textRoadmap.userProfile.skills.join(', ') || 'None'}</p>
+              <p className={`${subTextColorClass} text-sm mb-1`}><strong className={textColorClass}>Experience:</strong> {textRoadmap.userProfile.experienceLevel}</p>
+              <p className={`${subTextColorClass} text-sm mb-1`}><strong className={textColorClass}>Short Goals:</strong> {textRoadmap.userProfile.careerGoals}</p>
+              <p className={`${subTextColorClass} text-sm mb-1`}><strong className={textColorClass}>Long Goals:</strong> {textRoadmap.userProfile.longTermGoals}</p>
+              {textRoadmap.durationPreference && (
+                <p className={`${subTextColorClass} text-sm`}><strong className={textColorClass}>Duration:</strong> {textRoadmap.durationPreference.replace('_', ' ')}</p>
+              )}
+            </section>
+
+            <section className="mb-6">
+              <h2 className={`text-xl font-semibold mb-3 ${textColorClass} flex items-center gap-2`}>
+                <MapIcon size={20} className="text-green-500" /> Steps
+              </h2>
+              <div className="grid gap-5">
+                {textRoadmap.roadmap.map((step: RoadmapStep) => (
+                  <motion.div
+                    key={step.step}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: step.step * 0.05 }}
+                    className={`p-5 rounded-xl ${cardBgClass} border ${borderColorClass} relative overflow-hidden`}
+                  >
+                    <span className={`absolute -top-3 -left-3 text-6xl font-bold opacity-10 ${isDark ? 'text-red-300' : 'text-red-500'}`}>{step.step}</span>
+                    <h3 className={`text-lg font-medium mb-1 ${textColorClass}`}>{step.title}</h3>
+                    {step.estimatedTime && <p className={`${subTextColorClass} text-xs mb-2`}><Calendar size={14} className="inline mr-1 text-orange-400" />Estimated: {step.estimatedTime}</p>}
+                    <p className={`${subTextColorClass} text-sm mb-2`}>{step.description}</p>
+                    {step.resources?.length > 0 && (
+                      <div>
+                        <p className={`text-sm font-medium ${textColorClass} mb-1`}>Resources:</p>
+                        <ul className="list-disc ml-5 space-y-1 text-xs">
+                          {step.resources.map((r, i) => (
+                            <li key={i} className="flex items-center gap-1">
+                              <ExternalLink size={12} className={`${subTextColorClass}`} />
+                              <a href={r} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline truncate">
+                                {r}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+
+            <section className={`p-5 rounded-xl ${cardBgClass} border ${borderColorClass}`}>
+              <h2 className={`text-xl font-semibold mb-3 ${textColorClass} flex items-center gap-2`}>
+                <Target size={20} className="text-red-500" /> Summary
+              </h2>
+              <p className={`${subTextColorClass} text-sm leading-relaxed`}>{textRoadmap.summary}</p>
+            </section>
+          </motion.div>
+        )}
+
+        {activeTab === 'flow' && (
+          <motion.div
+            key="flow-roadmap"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className={`react-flow-container h-[500px] rounded-xl overflow-hidden ${cardBgClass} border ${borderColorClass}`}
           >
-            <BarChart2 size={20} /> Visual Flow
-          </button>
-        </div>
-
-        <AnimatePresence mode="wait">
-          {activeTab === 'text' && (
-            <motion.div
-              key="text-roadmap"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="text-roadmap-content"
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              fitView
+              className={`${isDark ? 'bg-gray-900/60' : 'bg-gray-100/60'}`}
             >
-              {/* User Profile */}
-              <section className={`mb-8 p-6 rounded-xl ${cardBgClass} border ${borderColorClass}`}>
-                <h2 className={`text-2xl font-bold mb-4 ${textColorClass} flex items-center gap-2`}>
-                  <User size={24} className="text-purple-400" /> Your Profile
-                </h2>
-                <p className={`${subTextColorClass} mb-2`}>
-                  <strong className={textColorClass}>Skills:</strong> {textRoadmap.userProfile.skills.length > 0 ? textRoadmap.userProfile.skills.join(', ') : 'Not specified'}
-                </p>
-                <p className={`${subTextColorClass} mb-2`}>
-                  <strong className={textColorClass}>Experience Level:</strong> {textRoadmap.userProfile.experienceLevel}
-                </p>
-                <p className={`${subTextColorClass} mb-2`}>
-                  <strong className={textColorClass}>Short-term Goals:</strong> {textRoadmap.userProfile.careerGoals}
-                </p>
-                <p className={`${subTextColorClass} mb-2`}>
-                  <strong className={textColorClass}>Long-term Goals:</strong> {textRoadmap.userProfile.longTermGoals}
-                </p>
-                {textRoadmap.durationPreference && textRoadmap.durationPreference !== 'no_preference' && (
-                    <p className={`${subTextColorClass}`}>
-                        <strong className={textColorClass}>Preferred Duration:</strong> {textRoadmap.durationPreference.replace('_', ' ')}
-                    </p>
-                )}
-              </section>
+              <Controls className={`${isDark ? 'bg-gray-700 text-gray-100 border-gray-600' : 'bg-white text-gray-700 border-gray-200'}`} />
+              <MiniMap
+                nodeStrokeColor={isDark ? '#EF4444' : '#F97316'}
+                nodeColor={isDark ? '#7F1D1D' : '#F87171'}
+                maskColor={isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)'}
+                nodeBorderRadius={2}
+                className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
+              />
+              <Background variant={BackgroundVariant.Dots} gap={12} size={1} color={isDark ? '#4B5563' : '#D1D5DB'} />
+            </ReactFlow>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  </div>
+);
 
-              {/* Roadmap Steps */}
-              <section className="mb-8">
-                <h2 className={`text-2xl font-bold mb-4 ${textColorClass} flex items-center gap-2`}>
-                  <MapIcon size={24} className="text-green-400" /> Roadmap Steps
-                </h2>
-                <div className="grid gap-6">
-                  {textRoadmap.roadmap.map((step: RoadmapStep) => (
-                    <motion.div
-                      key={step.step}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: step.step * 0.05 }}
-                      className={`p-6 rounded-xl ${cardBgClass} border ${borderColorClass} relative overflow-hidden`}
-                    >
-                        <span className={`absolute -top-3 -left-3 text-7xl font-extrabold opacity-10 ${isDark ? 'text-blue-200' : 'text-blue-600'}`}>{step.step}</span>
-                      <h3 className={`text-xl font-semibold mb-2 ${textColorClass} flex items-center gap-2`}>
-                        {step.title || `Step ${step.step}`}
-                      </h3>
-                      {step.estimatedTime && (
-                        <p className={`${subTextColorClass} text-sm mb-2 flex items-center gap-1`}>
-                          <Calendar size={14} className="inline-block text-orange-400" />
-                          <span className="font-medium">Estimated:</span> {step.estimatedTime}
-                        </p>
-                      )}
-                      <p className={`${subTextColorClass} mb-3`}>
-                        {step.description}
-                      </p>
-                      {step.resources && step.resources.length > 0 && (
-                        <div>
-                          <p className={`font-medium ${textColorClass} mb-1`}>Resources:</p>
-                          <ul className="list-disc list-inside space-y-1">
-                            {step.resources.map((resource, index) => (
-                              <li key={index} className="flex items-center text-sm">
-                                <ExternalLink size={14} className={`mr-2 ${subTextColorClass}`} />
-                                <a
-                                  href={resource}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-400 hover:text-blue-300 transition-colors truncate max-w-full block"
-                                >
-                                  {resource}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
 
-              {/* Summary */}
-              <section className={`p-6 rounded-xl ${cardBgClass} border ${borderColorClass}`}>
-                <h2 className={`text-2xl font-bold mb-4 ${textColorClass} flex items-center gap-2`}>
-                  <Target size={24} className="text-red-400" /> Roadmap Summary
-                </h2>
-                <p className={`${subTextColorClass} leading-relaxed`}>
-                  {textRoadmap.summary}
-                </p>
-              </section>
-            </motion.div>
-          )}
-
-          {activeTab === 'flow' && (
-            <motion.div
-              key="flow-roadmap"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className={`react-flow-container h-[600px] rounded-xl overflow-hidden ${cardBgClass} border ${borderColorClass}`}
-            >
-              <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                nodeTypes={nodeTypes}
-                fitView
-                className={`${isDark ? 'bg-gray-900/50' : 'bg-gray-50/50'}`}
-              >
-                <Controls showInteractive={false} className={`${isDark ? 'bg-gray-700 text-gray-200 border-gray-600' : 'bg-white text-gray-700 border-gray-200'}`} />
-                <MiniMap nodeStrokeColor={isDark ? '#4A90E2' : '#2196F3'} nodeColor={isDark ? '#3B82F6' : '#2196F3'} nodeBorderRadius={2} maskColor={isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)'} className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`} />
-                <Background variant={BackgroundVariant.Dots} gap={12} size={1} color={isDark ? '#4A4A4A' : '#E0E0E0'} />
-              </ReactFlow>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </div>
-  );
 };

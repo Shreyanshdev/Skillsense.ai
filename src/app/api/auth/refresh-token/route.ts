@@ -7,11 +7,10 @@ import { generateAccessToken, generateRefreshToken } from '@/utils/authTokens';
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // Ensure DB connection is established per request, good for serverless.
   await connectDB(); 
-
+  console.log('--- REFRESH TOKEN ROUTE HIT ---'); 
   const oldRefreshToken: string | undefined = req.cookies.get('refreshToken')?.value;
 
   if (!oldRefreshToken) {
-    // No refresh token provided in cookies.
     return NextResponse.json({ message: 'No refresh token provided.' }, { status: 401 });
   }
 
@@ -66,7 +65,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Prepare response. Access token is NOT sent in body as it's httpOnly.
     const response = NextResponse.json({ success: true });
-
+    
     // Set new Access Token cookie.
     response.cookies.set('token', newAccessToken, {
       httpOnly: true, // Prevents client-side JS access.
@@ -88,7 +87,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return response;
   } catch (err: any) {
     // For backend routes, consider a dedicated logging service instead of console.error in production.
-    // E.g., logger.error('Refresh token processing error:', err);
 
     // Handle specific JWT errors for more precise feedback.
     if (err instanceof jwt.TokenExpiredError) {

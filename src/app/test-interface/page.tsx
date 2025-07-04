@@ -35,7 +35,6 @@ const GAComponent = dynamic(() => import('@/components/TestInterface/GAComponent
 const ConfirmationModal = dynamic(() => import('@/components/TestInterface/ConfirmationModal'));
 
 
-// IMPORTANT: Ensure these interfaces match your testSlice.ts and backend response
 interface TestDataWithRounds extends TestData {
   title: string; // If your backend also sends a title (not in current TestData from slice)
 }

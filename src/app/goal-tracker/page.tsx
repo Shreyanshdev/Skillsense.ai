@@ -1,12 +1,11 @@
 // src/app/goal-tracker/page.tsx
-// Example page file for the /goal-tracker route
-
 'use client';
 
 import React from 'react';
 import AppLayout from '@/components/Layout/AppLayout';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import GoalSetup from '@/components/Goal-tracker/GoalSetup';
 
 // Placeholder component for your Goal Tracker content
 const GoalTrackerContent = () => {
@@ -23,12 +22,10 @@ const GoalTrackerContent = () => {
 
 
 export default function GoalTrackerPage() {
-  // This page component uses the AppLayout and places its specific content inside.
-  // The Sidebar will automatically highlight the "Goal Tracker" link because the URL path is /goal-tracker.
-
+  
   return (
     <AppLayout>
-      <GoalTrackerContent />
+      <GoalSetup isDark/>
     </AppLayout>
   );
 }

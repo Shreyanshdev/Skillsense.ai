@@ -1,9 +1,12 @@
-import React from 'react'; // Import React
+import React from 'react';
 import { Providers } from '../redux/provider';
 import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
+
+// Import the new ProtectedLayout
+import ProtectedLayout from './ProtectedLayout'; // create this file next
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -22,14 +25,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-      <html lang="en" suppressHydrationWarning className={poppins.variable}>
-        <body className="font-sans">
-          <Providers>
+    <html lang="en" suppressHydrationWarning className={poppins.variable}>
+      <body className="font-sans">
+        <Providers>
+          {/* Wrap main app inside ProtectedLayout */}
+          <ProtectedLayout>
             {children}
-            <Toaster position="top-center" reverseOrder={false} />
-          </Providers>
-        </body>
-      </html>
-
+          </ProtectedLayout>
+          <Toaster position="top-center" reverseOrder={false} />
+        </Providers>
+      </body>
+    </html>
   );
 }

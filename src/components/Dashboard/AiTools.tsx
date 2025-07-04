@@ -37,6 +37,13 @@ const aiToolsList = [
     buttonText: 'Create Now',
     path: '/cover-letter-generator',
   },
+  {
+    name: 'Ai-Resume Builder',
+    desc: 'Craft Resume, Superbb Ats friendly resume that help you to get shortlisted',
+    icon: '/cover.png',
+    buttonText: 'Build Now',
+    path: '/my-resumes',
+  }
 ];
 
 // Animation variants for staggered grid items

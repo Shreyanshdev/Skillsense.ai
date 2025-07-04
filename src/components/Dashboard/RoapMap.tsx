@@ -1,14 +1,12 @@
-// src/components/Dashboard/RoadmapGenerateDialog.tsx
 'use client';
 
 import React, { useState, ChangeEvent, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import axios from 'axios';
 import api from '@/services/api';
 import { v4 as uuidv4 } from 'uuid';
-import { Loader2, X, Map, Check } from 'lucide-react';
+import { Loader2, X, Map } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface RoadmapGenerateDialogProps {
@@ -26,14 +24,12 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
   const isDark = theme === 'dark';
 
   const [userInput, setUserInput] = useState<string>('');
-  // NEW STATE FOR TIME DURATION
-  const [timeDuration, setTimeDuration] = useState<string>(''); // Default to empty string for 'No Preference'
+  const [timeDuration, setTimeDuration] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Theme-dependent dialog classes
   const textColorClass = isDark ? 'text-gray-100' : 'text-gray-900';
   const subTextColorClass = isDark ? 'text-gray-400' : 'text-gray-600';
   const borderColorClass = isDark ? 'border-gray-700/50' : 'border-gray-200/50';
@@ -46,7 +42,6 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
   const inputBgClass = isDark ? 'bg-gray-700' : 'bg-gray-100';
   const inputBorderFocus = isDark ? 'focus:border-sky-500' : 'focus:border-blue-500';
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textAreaRef.current) {
       textAreaRef.current.style.height = 'auto';
@@ -54,11 +49,10 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
     }
   }, [userInput]);
 
-  // Reset dialog state when it opens/closes
   useEffect(() => {
     if (isOpen) {
       setUserInput('');
-      setTimeDuration(''); // Reset time duration
+      setTimeDuration('');
       setLoading(false);
       setErrorMessage('');
     }
@@ -78,15 +72,13 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
       const result = await api.post('/ai-roadmap-agent', {
         roadmapId: roadmapId,
         userInput: userInput,
-        // NEW: Include timeDuration in the payload
-        timeDuration: timeDuration || 'no_preference', // Send 'no_preference' if not selected
+        timeDuration: timeDuration || 'no_preference',
       });
-      console.log("Roadmap generated successfully:", result.data);
       toast.success('Roadmap generation initiated!');
       onGenerateSuccess(roadmapId);
       onClose();
     } catch (e: any) {
-      console.error("Error generating roadmap:", e);
+      console.error('Error generating roadmap:', e);
       setErrorMessage(e.response?.data?.error || 'Failed to generate roadmap. Please try again.');
       toast.error('Failed to generate roadmap.');
     } finally {
@@ -100,7 +92,7 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
     }
   };
 
-  const dropIn:Variants = {
+  const dropIn: Variants = {
     hidden: { y: '-100vh', opacity: 0 },
     visible: { y: '0', opacity: 1, transition: { duration: 0.2, type: 'spring', damping: 25, stiffness: 500 } },
     exit: { y: '100vh', opacity: 0 },
@@ -118,14 +110,13 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
         onClick={handleCloseDialog}
       >
         <motion.div
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           variants={dropIn}
           initial="hidden"
           animate="visible"
           exit="exit"
           className={`relative p-8 rounded-2xl shadow-xl w-11/12 max-w-lg ${dialogBgClass} border ${borderColorClass} ${textColorClass} backdrop-blur-lg`}
         >
-          {/* Close Button */}
           <button
             onClick={handleCloseDialog}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
@@ -142,7 +133,6 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
             Describe your current career situation or desired goals, and our AI will craft a personalized roadmap for you. You can also specify a time duration.
           </p>
 
-          {/* User Input Textarea */}
           <div className="mb-4">
             <label htmlFor="roadmap-input" className={`block text-sm font-medium mb-2 ${subTextColorClass}`}>
               Your Goals / Current Situation:
@@ -155,7 +145,7 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
                 setUserInput(e.target.value);
                 setErrorMessage('');
               }}
-              placeholder="E.g., 'I want to become a Senior Frontend Developer specializing in React within 3 years, starting from a junior role.', or 'I'm a Data Analyst looking to transition into Machine Learning Engineering.'"
+              placeholder="E.g., 'I want to become a Senior Frontend Developer specializing in React within 3 years.'"
               rows={4}
               className={`w-full p-3 rounded-lg border-2 ${borderColorClass} ${inputBgClass} ${textColorClass} placeholder-${subTextColorClass} focus:outline-none ${inputBorderFocus} transition-all duration-200 resize-y min-h-[100px]`}
               disabled={loading}
@@ -171,29 +161,21 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
             )}
           </div>
 
-          {/* NEW: Time Duration Selection */}
           <div className="mb-6">
             <label htmlFor="time-duration" className={`block text-sm font-medium mb-2 ${subTextColorClass}`}>
               Time Duration (Optional):
             </label>
-            <select
+            <input
               id="time-duration"
+              type="text"
+              placeholder="E.g. 6 months, 1 year, etc."
               value={timeDuration}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => setTimeDuration(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setTimeDuration(e.target.value)}
               className={`w-full p-3 rounded-lg border-2 ${borderColorClass} ${inputBgClass} ${textColorClass} focus:outline-none ${inputBorderFocus} transition-all duration-200`}
               disabled={loading}
-            >
-              <option value="">No Preference</option> {/* Optional value */}
-              <option value="6_months">6 Months</option>
-              <option value="1_year">1 Year</option>
-              <option value="2_years">2 Years</option>
-              <option value="3_years">3 Years</option>
-              <option value="5_years">5 Years</option>
-              <option value="10_years">10+ Years</option>
-            </select>
+            />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-6">
             <motion.button
               onClick={handleCloseDialog}
@@ -207,7 +189,7 @@ export const RoadmapGenerateDialog: React.FC<RoadmapGenerateDialogProps> = ({
 
             <motion.button
               onClick={GenerateRoadmap}
-              className={`inline-flex items-center justify-center gap-x-2 px-6 py-2 rounded-full text-white font-semibold shadow-md transition-all duration-200
+              className={`inline-flex items-center justify-center gap-x-2 px-6 py-2 rounded-full text-white font-semibold shadow-md transition-all duration-200 cursor-pointer
                          ${primaryButtonGradient} ${primaryButtonHover} ${primaryButtonShadow}
                          ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-103 active:scale-97'}`}
               whileHover={loading ? {} : { scale: 1.03 }}

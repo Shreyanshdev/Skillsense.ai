@@ -10,10 +10,7 @@ import crypto from 'crypto'; // For generating random passwords.
 import qs from 'querystring';
 import { generateAccessToken, generateRefreshToken } from '@/utils/authTokens'; // Import common token functions.
 
-// Ensure connectDB is called only once, or handle its async nature
-// For Next.js App Router API routes, it's often better to connect
-// inside the handler or use a pattern that ensures it's connected.
-// If connectDB is idempotent, it's fine here.
+
 connectDB(); 
 
 const {

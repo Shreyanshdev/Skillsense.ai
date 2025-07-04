@@ -9,11 +9,10 @@ import { FcGoogle } from 'react-icons/fc';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import GlobalBackground from '@/components/Landing/GlobalBackground'; 
-import toast from 'react-hot-toast'; // Import toast
+import toast from 'react-hot-toast'; 
 import React from 'react';
 import axios from 'axios';
 import api from '@/services/api'; 
-; // Import your custom axios instance
 
 interface AxiosError<T = any> extends Error {
   config: any;

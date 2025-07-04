@@ -1,14 +1,14 @@
-// src/components/Dashboard/WelcomeBanner.tsx
-
 'use client';
 
 import React from 'react';
 import { motion } from 'framer-motion';
-
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 export const WelcomeBanner = () => {
+  const theme = useSelector((state: RootState) => state.theme.theme);
 
-  const theme = 'dark'; // Placeholder: replace with actual theme logic if Redux is unavailable
+  const isDark = theme === 'dark';
 
   return (
     <motion.div
@@ -16,63 +16,65 @@ export const WelcomeBanner = () => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
       className={`
-        w-full // Ensures it uses full width of its parent
-        p-6 sm:p-8 md:p-10 // Adjusted responsive padding for a more minimalistic feel
-        rounded-3xl overflow-hidden relative shadow-lg
-        ${
-          theme === 'dark'
-            ? 'bg-gradient-to-r from-purple-800 to-indigo-900'
-            : 'bg-gradient-to-r from-violet-600 to-fuchsia-600'
-        }
+        w-full relative overflow-hidden rounded-3xl p-6 sm:p-8 md:p-10 shadow-lg
+        ${isDark
+          ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 text-white'
+          : 'bg-gradient-to-r from-white via-slate-100 to-slate-200 text-gray-800'}
       `}
     >
-      {/* Background elements (keep for dynamic feel, they are subtle) */}
-      <div className={`absolute inset-0 opacity-20 ${theme === 'dark' ? 'bg-dots-dark' : 'bg-dots-light'}`} />
-      <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white opacity-10 blur-xl" />
-      <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white opacity-10 blur-xl" />
+      {/* Blurred Background Orbs */}
+      <div className="absolute top-[-40px] right-[-40px] w-40 h-40 rounded-full bg-white opacity-10 blur-2xl" />
+      <div className="absolute bottom-[-40px] left-[-40px] w-52 h-52 rounded-full bg-white opacity-10 blur-2xl" />
 
-      <div className="relative z-10">
+      {/* Main Content */}
+      <div className="relative z-10 max-w-5xl mx-auto text-center">
         <motion.h2
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="font-bold text-2xl sm:text-3xl text-white mb-2" // Slightly reduced font size for minimalism
+          className="text-2xl sm:text-3xl md:text-3xl font-bold tracking-tight mb-3 leading-snug"
         >
-          AI-Driven Career Guide
+          Empower Your Career with <span className="text-red-500">SkillSense</span>
         </motion.h2>
+
         <motion.p
-          initial={{ y: -20, opacity: 0 }}
+          initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-white text-md sm:text-lg mb-6 max-w-3xl" // Adjusted font size slightly
+          className="text-sm sm:text-base md:text-sm max-w-2xl mx-auto leading-relaxed opacity-90"
         >
-          Make smarter career decisions here – get tailored advice, real-time market insights, and personalized roadmaps.
+          Build your personalized roadmap, track your learning goals, generate AI-powered interviews, cover letters, and
+          sharpen your skills daily — all in one dashboard.
         </motion.p>
-        <motion.button
-          whileHover={{ scale: 1.05, boxShadow: theme === 'dark' ? '0 0 20px rgba(0, 179, 255, 0.4)' : '0 0 20px rgba(59, 130, 246, 0.4)' }}
-          whileTap={{ scale: 0.95 }}
-          className={`
-            flex items-center gap-x-2 rounded-full px-6 py-3 text-sm font-semibold shadow-lg
-            transition-all duration-300 ease-out cursor-pointer
-            ${theme === 'dark'
-              ? 'bg-gray-100 text-gray-900 hover:bg-white' // Light button, dark text for dark theme banner
-              : 'bg-white text-violet-700 hover:bg-gray-100' // White button, violet text for light theme banner
-            }
-          `}
+
+        <motion.div
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+          className="mt-6 flex justify-center"
         >
-          Let&apos;s Get Started
-          {/* Replaced FiArrowRight with an inline SVG */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="currentColor"
-            className="w-4 h-4 ml-1"
+          <button
+            className={`
+              inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-sm sm:text-base
+              transition-all duration-300 shadow-md
+              ${isDark
+                ? 'bg-red-500 hover:bg-red-400 text-white'
+                : 'bg-red-600 hover:bg-red-500 text-white'}
+            `}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
-          </svg>
-        </motion.button>
+            Explore SkillSense
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 8.25L21 12l-3.75 3.75M21 12H3" />
+            </svg>
+          </button>
+        </motion.div>
       </div>
     </motion.div>
   );

@@ -4,47 +4,46 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { motion } from 'framer-motion';
-import dynamic from 'next/dynamic';
 import Sidebar from '@/components/Sidebar/Sidebar';
 import GlobalBackground from '@/components/Landing/GlobalBackground';
 import { FiMenu } from 'react-icons/fi';
 import React from 'react';
 import api from '@/services/api'; // Adjust path if needed
-// Separate Bubbles component - Remains the same
-const Bubbles = ({ theme }: { theme: string }) => {
-    const bubbles = useMemo(
-      () =>
-        Array.from({ length: 10 }).map(() => {
-          const size = Math.random() * 100 + 50;
-          const left = Math.random() * 100;
-          const top = Math.random() * 100;
-          const xInitial = Math.random() * 100;
-          const xAnimate = Math.random() * 100 - 50;
-          const duration = 10 + Math.random() * 10;
-          const delay = Math.random() * 5;
-          return { size, left, top, xInitial, xAnimate, duration, delay };
-        }),
-      []
-    );
-    return (
-      <>
-        {bubbles.map((bubble, i) => (
-          <motion.div
-            key={i}
-            initial={{ y: 0, x: bubble.xInitial }}
-            animate={{ y: [0, -100, -200, -300], x: [0, bubble.xAnimate], opacity: [1, 0.8, 0.5, 0] }}
-            transition={{ duration: bubble.duration, repeat: Infinity, delay: bubble.delay }}
-            className={`absolute rounded-full ${
-              theme === 'dark' ? 'bg-sky-900/20 border border-sky-800/30' : 'bg-sky-200/50 border border-sky-300/50'
-            }`}
-            style={{ width: `${bubble.size}px`, height: `${bubble.size}px`, left: `${bubble.left}%`, top: `${bubble.top}%` }}
-          />
-        ))}
-      </>
-    );
-};
 
-const NoSSR_Bubbles = dynamic(() => Promise.resolve(Bubbles), { ssr: false });
+// Separate Bubbles component - Remains the same
+// const Bubbles = ({ theme }: { theme: string }) => {
+//     const bubbles = useMemo(
+//       () =>
+//         Array.from({ length: 10 }).map(() => {
+//           const size = Math.random() * 100 + 50;
+//           const left = Math.random() * 100;
+//           const top = Math.random() * 100;
+//           const xInitial = Math.random() * 100;
+//           const xAnimate = Math.random() * 100 - 50;
+//           const duration = 10 + Math.random() * 10;
+//           const delay = Math.random() * 5;
+//           return { size, left, top, xInitial, xAnimate, duration, delay };
+//         }),
+//       []
+//     );
+//     return (
+//       <>
+//         {bubbles.map((bubble, i) => (
+//           <motion.div
+//             key={i}
+//             initial={{ y: 0, x: bubble.xInitial }}
+//             animate={{ y: [0, -100, -200, -300], x: [0, bubble.xAnimate], opacity: [1, 0.8, 0.5, 0] }}
+//             transition={{ duration: bubble.duration, repeat: Infinity, delay: bubble.delay }}
+//             className={`absolute rounded-full ${
+//               theme === 'dark' ? 'bg-sky-900/20 border border-sky-800/30' : 'bg-sky-200/50 border border-sky-300/50'
+//             }`}
+//             style={{ width: `${bubble.size}px`, height: `${bubble.size}px`, left: `${bubble.left}%`, top: `${bubble.top}%` }}
+//           />
+//         ))}
+//       </>
+//     );
+// };
+// const NoSSR_Bubbles = dynamic(() => Promise.resolve(Bubbles), { ssr: false });
 
 const SIDEBAR_WIDTH_OPEN = 256;
 const SIDEBAR_WIDTH_CLOSED = 90;
@@ -69,16 +68,13 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         const response = await api.get<UserAuthInfo>('/user-info');
           setUserAuthInfo(response.data);
         } catch (error: any) {
-          // Handle unauthenticated case, e.g., redirect to login
           console.error('Error fetching user info:', error);
-          // Optional: if not authenticated, redirect to login
-          // window.location.href = '/login';
         }finally {
         setLoadingUser(false);
       }
     };
     fetchUserInfo();
-  }, []); // Run once on mount
+  }, []); 
 
   // Effect to apply/remove 'dark' class to the HTML element
   useEffect(() => {
@@ -90,7 +86,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   }, [theme]);
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarPinned, setIsSidebarPinned] = useState(true);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   const [currentSidebarWidth, setCurrentSidebarWidth] = useState(SIDEBAR_WIDTH_CLOSED);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -129,7 +125,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <div className={`min-h-screen relative overflow-hidden ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-50/50'} transition-colors duration-300`}>
         <GlobalBackground isDark={theme === 'dark'}></GlobalBackground>
         <div className="fixed inset-0 overflow-hidden z-0">
-          <NoSSR_Bubbles theme={theme} />
+          {/* <NoSSR_Bubbles theme={theme} /> */}
         </div>
 
         <div className="flex relative z-10 h-screen">

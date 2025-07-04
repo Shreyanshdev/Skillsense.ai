@@ -1,4 +1,5 @@
 import { integer, json, pgTable, varchar } from "drizzle-orm/pg-core";
+import { update } from "lodash";
 export const usersTable = pgTable("users", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: varchar({ length: 255 }).notNull(),
@@ -12,6 +13,7 @@ export const HistoryTable = pgTable('historyTable',{
     content:json(),
     userEmail:varchar('userEmail').references(()=> usersTable.email) ,
     createdAt:varchar(),
+    updatedAt:varchar(),
     aiAgentType:varchar(),
     metadeta:varchar()
 });
