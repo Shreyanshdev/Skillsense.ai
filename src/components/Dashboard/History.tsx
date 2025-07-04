@@ -3,14 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, Variants } from 'framer-motion';
-import { FiArrowRight } from 'react-icons/fi';
 import { FaSearch, FaSpinner, FaWindowRestore } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import api from '@/services/api';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { Layers, Map, FileText, Bot, ClipboardCheck } from 'lucide-react';
+import { Map, FileText, Bot, ClipboardCheck } from 'lucide-react';
 
 const PAGE_SIZE = 15;
 
